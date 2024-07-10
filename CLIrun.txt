@@ -1,0 +1,31 @@
+## To run an encrypted HTTPS production server (best option for external access):
+#### Configure Nginx or a similar proxy server...
+#### Obtain a valid TLS certificate...
+#### Ensure that every route is secured...
+
+
+## To run an unsecure HTTP production server in Linux localhost (for internal access):
+pip install gunicorn
+gunicorn --bind 127.0.0.1:8080 --workers 3 run:app
+
+
+## To run an unsecure HTTP production server in Windows localhost (for internal access):
+pip install waitress
+waitress-serve --listen 127.0.0.1:8080 run:app
+
+
+## To run a development server in debug mode (not secure for production):
+python3 run.py --address 127.0.0.1 --port 8080 --debug
+
+
+## Use --help to see the valid arguments:
+# optional arguments:
+#   -h, --help            show this help message and exit
+#   -d, --debug           whether to activate the debug mode
+# 
+# required named arguments:
+#   -a IPAddress, --address IPAddress
+#                         the IP address for the server (e.g. 127.0.0.1)
+#   -p PortNum, --port PortNum
+#                         the port number for the server (e.g. 8080)
+

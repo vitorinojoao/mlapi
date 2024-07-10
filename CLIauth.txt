@@ -1,0 +1,28 @@
+## To generate the first ever token, expiring in exactly 1 day from this moment:
+python3 auth.py --user ExternalUserID --days 1 --reset
+
+
+## To generate another token using the same private and public key pair:
+python3 auth.py --user ExternalUserID --days 1
+
+
+## To generate another token without expiration (not secure for production):
+python3 auth.py --user ExternalUserID --days 0
+
+
+## Use --help to see the valid arguments:
+# optional arguments:
+#   -h, --help            show this help message and exit
+#   -r, --reset           whether to create a completely new private and public key pair
+#                         (otherwise, attempt to load from filepath in environmental variables)
+# 
+# required named arguments:
+#   -u ClientID, --client ClientID
+#                         the identifier of the client for who the token will be generated
+#   -d NumDays, --days NumDays
+#                         the number of days the client has access before it expires
+#                         -d 0 : access does not expire
+#                         -d 1 : access for 1 day from this moment
+#                         -d 7 : access for 1 week from this moment
+#                         -d N : access for N days from this moment
+

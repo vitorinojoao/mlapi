@@ -1,0 +1,30 @@
+[Unit]
+Description=MLAPI Automatic Restart Daemon
+After=network.target
+
+[Service]
+## --------------------------------------------------
+## Specify your USERNAME and group
+## --------------------------------------------------
+User=USERNAME
+Group=www-data
+## --------------------------------------------------
+## Specify the directory of the run.py file
+## --------------------------------------------------
+WorkingDirectory=/home/USERNAME/api
+## --------------------------------------------------
+## Specify the virtual environment
+## --------------------------------------------------
+Environment="PATH=/home/USERNAME/api/venvs/myvenv1/bin"
+## --------------------------------------------------
+## Specify the intended command to run a server
+## --------------------------------------------------
+ExecStart=/home/USERNAME/api/venvs/myvenv1/bin/gunicorn --bind 127.0.0.1:8080 --workers 3 run:app
+## --------------------------------------------------
+## Specify the time until server restarts
+## --------------------------------------------------
+Restart=always
+RestartSec=2s
+
+[Install]
+WantedBy=multi-user.target

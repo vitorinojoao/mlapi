@@ -1,0 +1,380 @@
+{
+	"info": {
+		"_postman_id": "3693cf64-2562-45a0-a4aa-c8fa5038bef1",
+		"name": "mlapirequests",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "13093245"
+	},
+	"item": [
+		{
+			"name": "HealthCheck",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://127.0.0.1:8080/api/",
+					"protocol": "http",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "8080",
+					"path": [
+						"api",
+						""
+					]
+				}
+			},
+			"response": [
+				{
+					"name": "HealthCheck",
+					"originalRequest": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://127.0.0.1:8080/api/",
+							"protocol": "http",
+							"host": [
+								"127",
+								"0",
+								"0",
+								"1"
+							],
+							"port": "8080",
+							"path": [
+								"api",
+								""
+							]
+						}
+					},
+					"status": "OK",
+					"code": 200,
+					"_postman_previewlanguage": "html",
+					"header": [
+						{
+							"key": "Access-Control-Allow-Origin",
+							"value": "localhost"
+						},
+						{
+							"key": "Content-Length",
+							"value": "61"
+						},
+						{
+							"key": "Content-Type",
+							"value": "text/html; charset=utf-8"
+						},
+						{
+							"key": "Date",
+							"value": "Mon, 04 Sep 2023 14:42:14 GMT"
+						},
+						{
+							"key": "Server",
+							"value": "waitress"
+						}
+					],
+					"cookie": [],
+					"body": "<h1>Health Check</h1>\n<p>All resources are up and running.</p>"
+				}
+			]
+		},
+		{
+			"name": "GetRequest",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJNTEFQSUF1dGhNYW5hZ2VyIiwiaWF0IjoxNjkzODM2MDE1LCJleHAiOjE2OTM5MjI0MTQsInN1YiI6IkV4dGVybmFsVXNlckEifQ.PtOqnAvGi_VuBfH3J70F5oHB94N2aPyAkAu1j__TM7JFI8kFDCtwHUgXntSFghKBPnEP_w5v78V5e5Hd3RwLkz8GycdNCYiMESXgoamO9vWzxTe2kXUC1uXnl5XpoyLGVpY8yDsNnjIUHYVSLCg2kxSyE1aRpu5Ish-AxnmYulqRCgw8hg-MKFwmyCRwiN2ffP6yJBDbSLVGDR0GtJjXLLGi2QErfudbnucWo69u3FDrmCaJ7_TUF5ZooJ36ZzcurAaLd5P46hfXolYpXvchhQEaqjVen_iacSguAo9h0Tm8qq0LJtzpR0NHmSezI4oxsQGV3xFKGILGR-DDozIB0A",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "http://127.0.0.1:8080/api/ml/",
+					"protocol": "http",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "8080",
+					"path": [
+						"api",
+						"ml",
+						""
+					]
+				}
+			},
+			"response": [
+				{
+					"name": "GetRequest",
+					"originalRequest": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJNTEFQSUF1dGhNYW5hZ2VyIiwiaWF0IjoxNjkzODM2MDE1LCJleHAiOjE2OTM5MjI0MTQsInN1YiI6IkV4dGVybmFsVXNlckEifQ.PtOqnAvGi_VuBfH3J70F5oHB94N2aPyAkAu1j__TM7JFI8kFDCtwHUgXntSFghKBPnEP_w5v78V5e5Hd3RwLkz8GycdNCYiMESXgoamO9vWzxTe2kXUC1uXnl5XpoyLGVpY8yDsNnjIUHYVSLCg2kxSyE1aRpu5Ish-AxnmYulqRCgw8hg-MKFwmyCRwiN2ffP6yJBDbSLVGDR0GtJjXLLGi2QErfudbnucWo69u3FDrmCaJ7_TUF5ZooJ36ZzcurAaLd5P46hfXolYpXvchhQEaqjVen_iacSguAo9h0Tm8qq0LJtzpR0NHmSezI4oxsQGV3xFKGILGR-DDozIB0A",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "http://127.0.0.1:8080/api/ml/",
+							"protocol": "http",
+							"host": [
+								"127",
+								"0",
+								"0",
+								"1"
+							],
+							"port": "8080",
+							"path": [
+								"api",
+								"ml",
+								""
+							]
+						}
+					},
+					"status": "OK",
+					"code": 200,
+					"_postman_previewlanguage": "html",
+					"header": [
+						{
+							"key": "Access-Control-Allow-Origin",
+							"value": "localhost"
+						},
+						{
+							"key": "Content-Length",
+							"value": "113"
+						},
+						{
+							"key": "Content-Type",
+							"value": "text/html; charset=utf-8"
+						},
+						{
+							"key": "Date",
+							"value": "Mon, 04 Sep 2023 14:42:18 GMT"
+						},
+						{
+							"key": "Server",
+							"value": "waitress"
+						}
+					],
+					"cookie": [],
+					"body": "<h1>ML Model</h1>\n<p>The utilized model is: DecisionTreeClassifier\n    <br>The class predictions can be: [0 1 2]\n</p>"
+				}
+			]
+		},
+		{
+			"name": "PostRequestOne",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJNTEFQSUF1dGhNYW5hZ2VyIiwiaWF0IjoxNjkzODM2MDE1LCJleHAiOjE2OTM5MjI0MTQsInN1YiI6IkV4dGVybmFsVXNlckEifQ.PtOqnAvGi_VuBfH3J70F5oHB94N2aPyAkAu1j__TM7JFI8kFDCtwHUgXntSFghKBPnEP_w5v78V5e5Hd3RwLkz8GycdNCYiMESXgoamO9vWzxTe2kXUC1uXnl5XpoyLGVpY8yDsNnjIUHYVSLCg2kxSyE1aRpu5Ish-AxnmYulqRCgw8hg-MKFwmyCRwiN2ffP6yJBDbSLVGDR0GtJjXLLGi2QErfudbnucWo69u3FDrmCaJ7_TUF5ZooJ36ZzcurAaLd5P46hfXolYpXvchhQEaqjVen_iacSguAo9h0Tm8qq0LJtzpR0NHmSezI4oxsQGV3xFKGILGR-DDozIB0A",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "[\r\n    // TCP Protocol and S0 State\r\n    [\"TCP\", \"S0\"]\r\n]",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://127.0.0.1:8080/api/ml/",
+					"protocol": "http",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "8080",
+					"path": [
+						"api",
+						"ml",
+						""
+					]
+				}
+			},
+			"response": [
+				{
+					"name": "PostRequestOne",
+					"originalRequest": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJNTEFQSUF1dGhNYW5hZ2VyIiwiaWF0IjoxNjkzODM2MDE1LCJleHAiOjE2OTM5MjI0MTQsInN1YiI6IkV4dGVybmFsVXNlckEifQ.PtOqnAvGi_VuBfH3J70F5oHB94N2aPyAkAu1j__TM7JFI8kFDCtwHUgXntSFghKBPnEP_w5v78V5e5Hd3RwLkz8GycdNCYiMESXgoamO9vWzxTe2kXUC1uXnl5XpoyLGVpY8yDsNnjIUHYVSLCg2kxSyE1aRpu5Ish-AxnmYulqRCgw8hg-MKFwmyCRwiN2ffP6yJBDbSLVGDR0GtJjXLLGi2QErfudbnucWo69u3FDrmCaJ7_TUF5ZooJ36ZzcurAaLd5P46hfXolYpXvchhQEaqjVen_iacSguAo9h0Tm8qq0LJtzpR0NHmSezI4oxsQGV3xFKGILGR-DDozIB0A",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "[\r\n    // TCP Protocol and S0 State\r\n    [\"TCP\", \"S0\"]\r\n]",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://127.0.0.1:8080/api/ml/",
+							"protocol": "http",
+							"host": [
+								"127",
+								"0",
+								"0",
+								"1"
+							],
+							"port": "8080",
+							"path": [
+								"api",
+								"ml",
+								""
+							]
+						}
+					},
+					"status": "OK",
+					"code": 200,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Access-Control-Allow-Origin",
+							"value": "localhost"
+						},
+						{
+							"key": "Content-Length",
+							"value": "4"
+						},
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						},
+						{
+							"key": "Date",
+							"value": "Mon, 04 Sep 2023 14:42:24 GMT"
+						},
+						{
+							"key": "Server",
+							"value": "waitress"
+						}
+					],
+					"cookie": [],
+					"body": "[\n    0\n]"
+				}
+			]
+		},
+		{
+			"name": "PostRequestMany",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJNTEFQSUF1dGhNYW5hZ2VyIiwiaWF0IjoxNjkzODM2MDE1LCJleHAiOjE2OTM5MjI0MTQsInN1YiI6IkV4dGVybmFsVXNlckEifQ.PtOqnAvGi_VuBfH3J70F5oHB94N2aPyAkAu1j__TM7JFI8kFDCtwHUgXntSFghKBPnEP_w5v78V5e5Hd3RwLkz8GycdNCYiMESXgoamO9vWzxTe2kXUC1uXnl5XpoyLGVpY8yDsNnjIUHYVSLCg2kxSyE1aRpu5Ish-AxnmYulqRCgw8hg-MKFwmyCRwiN2ffP6yJBDbSLVGDR0GtJjXLLGi2QErfudbnucWo69u3FDrmCaJ7_TUF5ZooJ36ZzcurAaLd5P46hfXolYpXvchhQEaqjVen_iacSguAo9h0Tm8qq0LJtzpR0NHmSezI4oxsQGV3xFKGILGR-DDozIB0A",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "[\r\n    // TCP Protocol and S0 State\r\n    [\"TCP\", \"S0\"],\r\n    [\"TCP\", 3],\r\n    [0, \"S0\"],\r\n    [0, 3],\r\n    // OTHER Protocol and OTHER State\r\n    [\"OTHER\", \"OTHER\"],\r\n    [\"OTHER\", 4],\r\n    [2, \"OTHER\"],\r\n    [2, 4]\r\n]",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://127.0.0.1:8080/api/ml/",
+					"protocol": "http",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "8080",
+					"path": [
+						"api",
+						"ml",
+						""
+					]
+				}
+			},
+			"response": [
+				{
+					"name": "PostRequestMany",
+					"originalRequest": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJNTEFQSUF1dGhNYW5hZ2VyIiwiaWF0IjoxNjkzODM2MDE1LCJleHAiOjE2OTM5MjI0MTQsInN1YiI6IkV4dGVybmFsVXNlckEifQ.PtOqnAvGi_VuBfH3J70F5oHB94N2aPyAkAu1j__TM7JFI8kFDCtwHUgXntSFghKBPnEP_w5v78V5e5Hd3RwLkz8GycdNCYiMESXgoamO9vWzxTe2kXUC1uXnl5XpoyLGVpY8yDsNnjIUHYVSLCg2kxSyE1aRpu5Ish-AxnmYulqRCgw8hg-MKFwmyCRwiN2ffP6yJBDbSLVGDR0GtJjXLLGi2QErfudbnucWo69u3FDrmCaJ7_TUF5ZooJ36ZzcurAaLd5P46hfXolYpXvchhQEaqjVen_iacSguAo9h0Tm8qq0LJtzpR0NHmSezI4oxsQGV3xFKGILGR-DDozIB0A",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "[\r\n    // TCP Protocol and S0 State\r\n    [\"TCP\", \"S0\"],\r\n    [\"TCP\", 3],\r\n    [0, \"S0\"],\r\n    [0, 3],\r\n    // OTHER Protocol and OTHER State\r\n    [\"OTHER\", \"OTHER\"],\r\n    [\"OTHER\", 4],\r\n    [2, \"OTHER\"],\r\n    [2, 4]\r\n]",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://127.0.0.1:8080/api/ml/",
+							"protocol": "http",
+							"host": [
+								"127",
+								"0",
+								"0",
+								"1"
+							],
+							"port": "8080",
+							"path": [
+								"api",
+								"ml",
+								""
+							]
+						}
+					},
+					"status": "OK",
+					"code": 200,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Access-Control-Allow-Origin",
+							"value": "localhost"
+						},
+						{
+							"key": "Content-Length",
+							"value": "18"
+						},
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						},
+						{
+							"key": "Date",
+							"value": "Mon, 04 Sep 2023 14:42:27 GMT"
+						},
+						{
+							"key": "Server",
+							"value": "waitress"
+						}
+					],
+					"cookie": [],
+					"body": "[\n    0,\n    0,\n    0,\n    0,\n    1,\n    1,\n    1,\n    1\n]"
+				}
+			]
+		}
+	]
+}

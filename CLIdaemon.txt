@@ -1,0 +1,17 @@
+## To create a daemon that runs the server at boot and automatically restarts it:
+#### Obtain the required permissions to use daemon services...
+#### Specify the missing information in the 'mlapidaemon.service' file...
+
+
+## To activate the daemon that runs the server:
+systemctl start mlapidaemon
+systemctl enable mlapidaemon
+
+
+## To check the status of the daemon:
+systemctl status mlapidaemon
+
+
+## To deactivate the daemon and terminate the server:
+systemctl stop mlapidaemon
+

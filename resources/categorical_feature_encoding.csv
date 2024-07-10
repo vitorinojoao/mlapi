@@ -1,0 +1,9 @@
+column,name,category,encoding
+0,protocol,TCP,0
+0,protocol,UDP,1
+0,protocol,OTHER,2
+1,state,REJ,0
+1,state,RSTR,1
+1,state,SF,2
+1,state,S0,3
+1,state,OTHER,4
