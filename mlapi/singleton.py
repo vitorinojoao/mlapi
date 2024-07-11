@@ -1,3 +1,6 @@
+# MLAPI Template by vitorinojoao
+
+
 class Singleton:
     """
     Superclass for singleton objects.
@@ -28,3 +31,6 @@ class Singleton:
         to perform a single initialization.
         """
         pass
+
+
+# End of MLAPI Template by vitorinojoao

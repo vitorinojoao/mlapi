@@ -1,6 +1,7 @@
 # Machine Learning API
 
 A template of a secure Application Programming Interface for Machine Learning models.  
+Copyright (c) 2024 João Vitorino  
 
 ## File Structure
 

@@ -1,3 +1,5 @@
+# MLAPI Template by vitorinojoao
+
 import time
 import numpy as np
 
@@ -182,3 +184,6 @@ def anomaly_output_fn(y, n_samples, class_labels=None):
             y[i] = class_labels[y[i]]
 
     return y
+
+
+# End of MLAPI Template by vitorinojoao

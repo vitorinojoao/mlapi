@@ -1,3 +1,5 @@
+# MLAPI Template by vitorinojoao
+
 # ------------------------------------------------------------
 # COMMAND-LINE INTERFACE
 # ------------------------------------------------------------
@@ -218,6 +220,12 @@ def create_jwt(reset, client_identifier, access_days):
         raise OSError("Could not write in the specified token directory.")
 
 
+# ------------------------------------------------------------
 # Entry point for the 'auth' command to generate a signed token
+# ------------------------------------------------------------
+
 if __name__ == "__main__":
     create_jwt(args.reset, args.client_identifier[0], args.access_days[0])
+
+
+# End of MLAPI Template by vitorinojoao

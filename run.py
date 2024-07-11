@@ -1,3 +1,5 @@
+# MLAPI Template by vitorinojoao
+
 # ------------------------------------------------------------
 # COMMAND-LINE INTERFACE
 # ------------------------------------------------------------
@@ -80,9 +82,18 @@ from mlapi import create_app
 # Environmental variables
 load_dotenv(".env")
 
+# ------------------------------------------------------------
 # Entry point for other commands to run a production WSGI server
+# ------------------------------------------------------------
+
 app = create_app()
 
-# Entry point for the 'run' command to run a development debug server
+# ------------------------------------------------------------
+# Entry point for the 'run' command to run a development server
+# ------------------------------------------------------------
+
 if __name__ == "__main__":
     app.run(host=args.flask_host[0], port=args.flask_port[0], debug=args.debug)
+
+
+# End of MLAPI Template by vitorinojoao

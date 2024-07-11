@@ -1,3 +1,5 @@
+# MLAPI Template by vitorinojoao
+
 import os
 from flask import Flask, request, jsonify
 from flask_cors import CORS
@@ -216,3 +218,6 @@ def verify_jwt(token, public_key, issuer, algorithm):
         algorithms=[algorithm],
         options={"require": ["iss", "iat", "exp", "sub"]},
     )
+
+
+# End of MLAPI Template by vitorinojoao

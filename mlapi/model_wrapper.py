@@ -1,3 +1,5 @@
+# MLAPI Template by vitorinojoao
+
 import joblib as jb
 
 from mlapi.singleton import Singleton
@@ -25,3 +27,6 @@ class ModelWrapper(Singleton):
         """Obtain the predictions of an ML model"""
 
         return self.model.predict(X)
+
+
+# End of MLAPI Template by vitorinojoao

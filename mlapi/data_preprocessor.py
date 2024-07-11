@@ -1,3 +1,5 @@
+# MLAPI Template by vitorinojoao
+
 import csv
 import numpy as np
 
@@ -85,16 +87,18 @@ class DataPreprocessor(Singleton):
             res = np.array(
                 [
                     [
-                        # Use encoding
-                        self.encoding_table[col][sample[col].lower()]
-                        # If value is of type string
-                        if isinstance(sample[col], str)
-                        # And column position is in encoding table
-                        and col in self.encoding_table
-                        # And string has an encoding
-                        and sample[col].lower() in self.encoding_table[col]
-                        # Otherwise, use value
-                        else sample[col]
+                        (
+                            # Use encoding
+                            self.encoding_table[col][sample[col].lower()]
+                            # If value is of type string
+                            if isinstance(sample[col], str)
+                            # And column position is in encoding table
+                            and col in self.encoding_table
+                            # And string has an encoding
+                            and sample[col].lower() in self.encoding_table[col]
+                            # Otherwise, use value
+                            else sample[col]
+                        )
                         for col in range(len(sample))
                     ]
                     for sample in content
@@ -105,3 +109,6 @@ class DataPreprocessor(Singleton):
             res = np.array(content)
 
         return res, res.shape[0]
+
+
+# End of MLAPI Template by vitorinojoao
