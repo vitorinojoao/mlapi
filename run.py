@@ -75,14 +75,6 @@ if __name__ == "__main__":
 # Flask Application
 # ----------------------
 
-from sklearn.ensemble import RandomForestClassifier
-import joblib as jb
-
-model = RandomForestClassifier()
-model.fit([[1, 2], [0, 3], [2, 3], [2, 4]], [0, 0, 1, 1])
-
-jb.dump(model, "./resources/classification_model.joblib")
-
 # Environmental variables
 from dotenv import load_dotenv
 
