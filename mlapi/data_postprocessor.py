@@ -1,86 +1,71 @@
 # MLAPI Template by vitorinojoao
 
-import time
+import logging
 import numpy as np
 
-from mlapi.singleton import Singleton
 
-
-class DataPostprocessor(Singleton):
+class DataPostprocessor:
     """
-    Singleton object to postprocess the predictions of an ML model
+    Object to postprocess the predictions of an ML model
     so they become a suitable JSON response to a request.
     """
 
-    def single_init(
+    def __init__(
         self,
+        logging_level,
         convert_class_scores,
         convert_anomaly_scores,
-        logging_level,
-        logging_filepath,
     ):
-        """Overridden method to perform a single initialization."""
-
         # Whether the predictions are confidence scores
         # that should be converted to labels
         # (output the label of the class with the highest score)
-        self.convert_class_scores = convert_class_scores
+        self.convert_class_scores = bool(convert_class_scores)
 
         # Whether the predictions are anomaly scores
         # that should be converted to labels
         # (output inliers/outliers from 1/-1 format to 0/1 format)
-        self.convert_anomaly_scores = convert_anomaly_scores
+        self.convert_anomaly_scores = bool(convert_anomaly_scores)
+
+        if self.convert_class_scores and self.convert_anomaly_scores:
+            raise ValueError(
+                "The conversion of ML model predictions must be enabled for"
+                + " class scores or for anomaly scores, but not both."
+            )
 
         # Logging levels:
         # 0 - Disabled
-        # 1 - Simple
-        # 2 - Detailed
-        self.logging_level = logging_level
+        # 10 - Debug
+        # 20 - Info
+        # 30 - Warning
+        # 40 - Error
+        # 50 - Critical
+        logging_level = int(logging_level)
+        self.logging_level = logging_level if logging_level > 0 else 100
 
-        if self.logging_level > 0:
-            self.logging_filepath = logging_filepath
-
-            try:
-                with open(self.logging_filepath, "a") as f:
-                    f.write(
-                        "\n" + str(int(time.time())) + "\t|Starting up the server...\n"
-                    )
-            except Exception:
-                raise OSError("Could not write in the specified logging file.")
-
-    def postprocess(self, y, n_samples, client=None):
+    def postprocess(self, y, n_samples):
         """Postprocess the predictions of an ML model."""
 
+        # Convert confidence score output to labels
         if self.convert_class_scores:
-            # Convert confidence score output to labels
             res = class_output_fn(y, n_samples)
 
+        # Convert anomaly score output to labels
         elif self.convert_anomaly_scores:
-            # Convert anomaly score output to labels
             res = anomaly_output_fn(y, n_samples)
 
+        # Leave output as scores
         else:
-            # Leave output as scores
             res = np.array(y, copy=False)
 
         # Optionally create a log entry
-        if self.logging_level > 0:
-            if client is None:
-                client = "Client"
-
-            logg = f"{str(int(time.time()))}\t|{client}\t|{str(n_samples)} predictions"
-
-            if self.logging_level > 1:
-                labels, counts = np.unique(res, return_counts=True)
-                logg += "".join(
-                    f"\t|{str(c)} of class '{str(l)}'" for c, l in zip(counts, labels)
+        if self.logging_level < 11:
+            labels, counts = np.unique(res, return_counts=True)
+            logging.debug(
+                "API: Predicted"
+                + "".join(
+                    f"  |{str(c)} of class '{str(l)}'" for c, l in zip(counts, labels)
                 )
-
-            try:
-                with open(self.logging_filepath, "a") as f:
-                    f.write(logg + "\n")
-            except Exception:
-                pass
+            )
 
         return res.tolist()
 

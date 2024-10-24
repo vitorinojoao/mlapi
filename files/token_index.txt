@@ -1,3 +1,0 @@
-token_1693836015.txt	|ExternalUserA	|access from 2023-09-04 14:00:15 until 2023-09-05 14:00:14 UTC
-token_1693836022.txt	|ExternalUserB	|access from 2023-09-04 14:00:22 until 2023-09-11 14:00:21 UTC
-token_1693836038.txt	|InternalUser	|access does not expire

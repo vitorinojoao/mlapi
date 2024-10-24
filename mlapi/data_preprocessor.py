@@ -1,24 +1,35 @@
 # MLAPI Template by vitorinojoao
 
 import csv
+import logging
 import numpy as np
 
-from mlapi.singleton import Singleton
 
-
-class DataPreprocessor(Singleton):
+class DataPreprocessor:
     """
-    Singleton object to preprocess the content of a request
+    Object to preprocess the content of a request
     so it becomes suitable input data for an ML model.
     """
 
-    def single_init(self, encoding_filepath=None):
-        """Overridden method to perform a single initialization."""
-
+    def __init__(
+        self,
+        logging_level,
+        encoding_filepath=None,
+    ):
         # Nested dictionaries containing the encoding of each category
         # of each categorical feature, according to its column position:
         # {  int column: { string category: int encoding }  }
         self.encoding_table = {}
+
+        # Logging levels:
+        # 0 - Disabled
+        # 10 - Debug
+        # 20 - Info
+        # 30 - Warning
+        # 40 - Error
+        # 50 - Critical
+        logging_level = int(logging_level)
+        self.logging_level = logging_level if logging_level > 0 else 100
 
         # For instance, for the first and second features, in columns 0 and 1:
         # {  0: { 'TCP': 0, 'UDP': 1, 'OTHER': 2 },
@@ -35,7 +46,7 @@ class DataPreprocessor(Singleton):
                         or "encoding" not in header
                     ):
                         raise TypeError(
-                            "The encoding file must have a header specifying"
+                            "The categorical encoding file must have a header specifying"
                             + " 'column', 'category', and 'encoding'."
                         )
 
@@ -47,28 +58,24 @@ class DataPreprocessor(Singleton):
                         header.index("encoding"),
                     )
 
-                    try:
-                        # Load the encoding of each category
-                        csvreader = csv.reader(f, delimiter=",", quotechar='"')
+                    # Load the encoding of each category
+                    csvreader = csv.reader(f, delimiter=",", quotechar='"')
 
-                        for row in csvreader:
-                            col = int(row[csv_positions[0]])
-                            cat = row[csv_positions[1]].lower()
-                            enc = int(row[csv_positions[2]])
+                    for row in csvreader:
+                        col = int(row[csv_positions[0]])
+                        cat = row[csv_positions[1]].lower()
+                        enc = int(row[csv_positions[2]])
 
-                            if col in self.encoding_table:
-                                self.encoding_table[col][cat] = enc
-                            else:
-                                self.encoding_table[col] = {cat: enc}
-
-                    except Exception:
-                        raise OSError("Could not load the specified encoding file.")
+                        if col in self.encoding_table:
+                            self.encoding_table[col][cat] = enc
+                        else:
+                            self.encoding_table[col] = {cat: enc}
 
             except TypeError as e:
                 raise e
 
-            except Exception:
-                raise OSError("Could not load the specified encoding file.")
+            except Exception as e:
+                raise OSError("Could not load the specified categorical encoding file.") from e
 
     def preprocess(self, content):
         """Preprocess the input data for an ML model"""
@@ -82,8 +89,8 @@ class DataPreprocessor(Singleton):
                 + " a 2D array in the (n_samples, n_features) shape."
             )
 
+        # Convert each category of each categorical feature
         if self.encoding_table:
-            # Convert each category of each categorical feature
             res = np.array(
                 [
                     [
@@ -107,6 +114,10 @@ class DataPreprocessor(Singleton):
 
         else:
             res = np.array(content)
+
+        # Optionally create a log entry
+        if self.logging_level < 21:
+            logging.info(f"API: Received {str(res.shape[0])} data samples")
 
         return res, res.shape[0]
 

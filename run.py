@@ -1,8 +1,8 @@
 # MLAPI Template by vitorinojoao
 
-# ------------------------------------------------------------
-# COMMAND-LINE INTERFACE
-# ------------------------------------------------------------
+# ---------------------------
+# Command-Line Interface
+# ---------------------------
 
 if __name__ == "__main__":
     from argparse import ArgumentParser, ArgumentTypeError, RawTextHelpFormatter
@@ -71,27 +71,30 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-# ------------------------------------------------------------
-# REGULAR CODE
-# ------------------------------------------------------------
+# ----------------------
+# Flask Application
+# ----------------------
 
-from dotenv import load_dotenv
+from sklearn.ensemble import RandomForestClassifier
+import joblib as jb
 
-from mlapi import create_app
+model = RandomForestClassifier()
+model.fit([[1, 2], [0, 3], [2, 3], [2, 4]], [0, 0, 1, 1])
+
+jb.dump(model, "./resources/classification_model.joblib")
 
 # Environmental variables
+from dotenv import load_dotenv
+
 load_dotenv(".env")
 
-# ------------------------------------------------------------
+
 # Entry point for other commands to run a production WSGI server
-# ------------------------------------------------------------
+from mlapi import create_app
 
 app = create_app()
 
-# ------------------------------------------------------------
 # Entry point for the 'run' command to run a development server
-# ------------------------------------------------------------
-
 if __name__ == "__main__":
     app.run(host=args.flask_host[0], port=args.flask_port[0], debug=args.debug)
 

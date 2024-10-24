@@ -1,16 +1,13 @@
 ## --------------------------------------------------
-## Flask and API Configuration
+## Required Packages
 ## --------------------------------------------------
-python-dotenv
-flask
-flask-cors
-pyjwt[crypto]
+python-dotenv==1.*
+flask==3.*
+flask-cors==5.*
+pyjwt[crypto]==2.*
 ## --------------------------------------------------
-## Data Preprocessor and Postprocessor
-## --------------------------------------------------
-numpy
-## --------------------------------------------------
-## Model Wrapper
+## Additional Packages
 ## --------------------------------------------------
 scikit-learn
+numpy
 joblib

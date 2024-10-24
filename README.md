@@ -13,9 +13,9 @@ the initialization of several singleton objects, and the setup of the routes of 
 
 The template is divided into three folders:
 
-- **mlapi** - the entire Python code of the API with useful comments (e.g., routes and singletons).
+- **mlapi** - the entire Python code of the API with useful comments (e.g., routes and objects).
 - **resources** - the resources required for the API to work properly (e.g., models and encodings).
-- **files** - supplementary files to help you interact with the API (e.g., requests and tokens).
+- **files** - supplementary files to help you interact with the API (e.g., commands and requests).
 
 ## Important Notes
 
@@ -29,16 +29,10 @@ The `mlapidaemon.service` file can be used to run the server at boot and automat
 You should check the commands in `CLIdaemon.txt`.  
 It has missing information that must be specified according to the characteristics of your system.  
 
-&rarr; **The auth.py CLI command generates a signed access token!**  
-The `auth.py` file can be used to generate signed tokens for a JWT authorization scheme.  
-You should check the commands in `CLIauth.txt`.  
-Each token should be shared with only one client to enable temporary access to the API.  
-
 &rarr; **An API is only as secure as its authorization scheme!**  
-A scalable and secure scheme with RSA signatures is implemented, but it must be used properly.  
+A JWT authorization scheme with RSA signatures is implemented, but it must be used properly.  
 You should ensure that every route requires an Authorization header and verifies the access tokens.  
-The `auth_public_key.pem` file may be shared to enable external verification of RSA signatures.  
-Do not share the `auth_private_key.pem` file nor the secret string used for its keyfile encryption.  
+After an initial request to `/auth/reset/`, the refresh tokens can be used at `/auth/refresh/` to renew access.
 
 ## Sample Code
 
@@ -47,7 +41,7 @@ A 2D input array can be created, converting categorical features into numerical 
 You can use and improve the code of `data_preprocessor.py`.  
 
 &rarr; **How to load and use an ML model in an efficient way?**  
-A model can be wrapped in a singleton object that is used to respond to every request.  
+A model can be wrapped in a single object that is used to respond to every request.  
 You can use and improve the code of `model_wrapper.py`.  
 
 &rarr; **How to postprocess the anomaly or class predictions?**  
@@ -55,5 +49,5 @@ A 1D output array can be created, converting anomaly scores or confidence scores
 You can use and improve the code of `data_postprocessor.py`.  
 
 &rarr; **How to send multiple requests to different routes?**  
-Several GET and POST requests can be sent, in addition to a general health check.  
+Several GET and POST requests can be sent for the routes of `/auth/` and `/api/`.  
 You can use `mlapirequests.postman_collection.json`.  

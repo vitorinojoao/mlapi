@@ -2,21 +2,20 @@
 
 import joblib as jb
 
-from mlapi.singleton import Singleton
 
-
-class ModelWrapper(Singleton):
+class ModelWrapper:
     """
-    Singleton object to encapsulate an ML model.
+    Object to encapsulate an ML model.
     """
 
-    def single_init(self, model_filepath):
-        """Overridden method to perform a single initialization."""
-
+    def __init__(
+        self,
+        model_filepath,
+    ):
         try:
             self.model = jb.load(model_filepath)
-        except:
-            raise OSError("Could not load the ML model.")
+        except Exception as e:
+            raise OSError("Could not load the ML model from the specified file.") from e
 
     def info(self):
         """Obtain information about an ML model"""

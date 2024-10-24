@@ -2,8 +2,7 @@
 ## Sensitive Files (should be uncommented)
 ## --------------------------------------------------
 # .env
-# log.txt
-# token_*.txt
+# files/
 # resources/
 ## --------------------------------------------------
 ## Python Files

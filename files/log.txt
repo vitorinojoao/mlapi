@@ -1,4 +1,0 @@
-
-1693838525	|Starting up the server...
-1693838544	|ExternalUserA	|processed 1 sample	|1 of class '0'
-1693838547	|ExternalUserA	|processed 8 samples	|4 of class '0'	|4 of class '1'

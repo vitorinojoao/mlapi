@@ -1,105 +1,266 @@
 {
 	"info": {
-		"_postman_id": "3693cf64-2562-45a0-a4aa-c8fa5038bef1",
+		"_postman_id": "aaef7a93-3cf4-4cf5-8f06-342a59a4562b",
 		"name": "mlapirequests",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-		"_exporter_id": "13093245"
+		"_exporter_id": "38246708"
 	},
 	"item": [
 		{
-			"name": "HealthCheck",
+			"name": "auth_reset_success",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", () => {\r",
+							"    pm.expect(pm.response.code).to.eql(200);\r",
+							"});\r",
+							"\r",
+							"pm.collectionVariables.set(\"refresh_token_0\", pm.response.json()[0])\r",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
 			"request": {
-				"method": "GET",
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "POST",
 				"header": [],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "username",
+							"value": "ClientA",
+							"type": "text"
+						},
+						{
+							"key": "password",
+							"value": "YouShouldReplaceTheseCredentials",
+							"type": "text"
+						}
+					]
+				},
 				"url": {
-					"raw": "http://127.0.0.1:8080/api/",
-					"protocol": "http",
+					"raw": "{{url}}/auth/reset/",
 					"host": [
-						"127",
-						"0",
-						"0",
-						"1"
+						"{{url}}"
 					],
-					"port": "8080",
 					"path": [
-						"api",
+						"auth",
+						"reset",
 						""
 					]
 				}
 			},
 			"response": [
 				{
-					"name": "HealthCheck",
+					"name": "auth_reset_success",
 					"originalRequest": {
-						"method": "GET",
+						"method": "POST",
 						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "username",
+									"value": "ClientA",
+									"type": "text"
+								},
+								{
+									"key": "password",
+									"value": "YouShouldReplaceTheseCredentials",
+									"type": "text"
+								}
+							]
+						},
 						"url": {
-							"raw": "http://127.0.0.1:8080/api/",
-							"protocol": "http",
+							"raw": "{{url}}/auth/reset/",
 							"host": [
-								"127",
-								"0",
-								"0",
-								"1"
+								"{{url}}"
 							],
-							"port": "8080",
 							"path": [
-								"api",
+								"auth",
+								"reset",
 								""
 							]
 						}
 					},
 					"status": "OK",
 					"code": 200,
-					"_postman_previewlanguage": "html",
+					"_postman_previewlanguage": "json",
 					"header": [
+						{
+							"key": "Server",
+							"value": "Werkzeug/3.0.4 Python/3.11.9"
+						},
+						{
+							"key": "Date",
+							"value": "Thu, 24 Oct 2024 16:45:47 GMT"
+						},
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						},
+						{
+							"key": "Content-Length",
+							"value": "861"
+						},
 						{
 							"key": "Access-Control-Allow-Origin",
 							"value": "localhost"
 						},
 						{
-							"key": "Content-Length",
-							"value": "61"
-						},
-						{
-							"key": "Content-Type",
-							"value": "text/html; charset=utf-8"
-						},
-						{
-							"key": "Date",
-							"value": "Mon, 04 Sep 2023 14:42:14 GMT"
-						},
-						{
-							"key": "Server",
-							"value": "waitress"
+							"key": "Connection",
+							"value": "close"
 						}
 					],
 					"cookie": [],
-					"body": "<h1>Health Check</h1>\n<p>All resources are up and running.</p>"
+					"body": "[\n    \"Bearer eyJhbGciOiJSUzUxMiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJNTEFQSUFTIiwiYXVkIjoicmVmcmVzaCIsInN1YiI6IkNsaWVudEExNzI5Nzg4MzQ3IiwiaWF0IjoxNzI5Nzg4MzQ3LCJleHAiOjE3Mjk4NzQ3NDd9.L24usu5-jwP95SiBVxPcRa8CeGlz2mHuDF0NmnjRFcYY-5sqm-kRCAOaY3ebIi2lN4GgJe2PA-el2SSBTCyvo2rAQeerxL9iU2NLjTR2kfAC7-Q0UCKtTQgNPepmiN41BDwgtivzKCitjDVxYkyt7xhGnZJAiAxHA7mPZz-t91QbVkw8vO7RkBkY-QvIFUkzOONtVvmDeeP-Ra_kbt8UdEIv9rA2CFXcc3fNMlwKgFGAv1eIdJeU9469YdF7FrAmFFbF_t49X5cXAt52uFx-9KM54e7_SN4csNcGkYLkNIj_kKhU3c91xOf_68o8b98Ls9sRyyXZ8ff-JaEYY52B9VH7D7oHfDcxAPeuc4uZ2Z739afMN9bpXJT5hxzaQ0Bvlm6gbT5mINMh0_Ar6N9Az5_Odiby9E5fC9tiFrRTQOjl1cQ2kZD1lc1pnEnoB_MfPEOxCN8a0GWbQ9TJ9MlVpjIhIetsXN4qMc2r5hu6CNHP_QqeU6yfM_bzKZt_g5zQlqVVHCrmxdtm0SIbaBnqdbfRzAqndk39CsaCFDugbEfliV07PrlfyzteQQoQl7JRQVC0oumeK_yYgMIk40S6K85JtWltEPEIT4FlwSPZRbZBDhJGq3oOvDYSRXCWXItt4eH5EErCwfAgxdkIo4llQCA_T_elgP4FCDbxw6JtAyU\"\n]"
 				}
 			]
 		},
 		{
-			"name": "GetRequest",
+			"name": "auth_refresh_1_success",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", () => {\r",
+							"    pm.expect(pm.response.code).to.eql(200);\r",
+							"});\r",
+							"\r",
+							"pm.collectionVariables.set(\"refresh_token_1\", pm.response.json()[1])\r",
+							"pm.collectionVariables.set(\"access_token_1\", pm.response.json()[0])\r",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
 			"request": {
+				"auth": {
+					"type": "noauth"
+				},
 				"method": "GET",
 				"header": [
 					{
 						"key": "Authorization",
-						"value": "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJNTEFQSUF1dGhNYW5hZ2VyIiwiaWF0IjoxNjkzODM2MDE1LCJleHAiOjE2OTM5MjI0MTQsInN1YiI6IkV4dGVybmFsVXNlckEifQ.PtOqnAvGi_VuBfH3J70F5oHB94N2aPyAkAu1j__TM7JFI8kFDCtwHUgXntSFghKBPnEP_w5v78V5e5Hd3RwLkz8GycdNCYiMESXgoamO9vWzxTe2kXUC1uXnl5XpoyLGVpY8yDsNnjIUHYVSLCg2kxSyE1aRpu5Ish-AxnmYulqRCgw8hg-MKFwmyCRwiN2ffP6yJBDbSLVGDR0GtJjXLLGi2QErfudbnucWo69u3FDrmCaJ7_TUF5ZooJ36ZzcurAaLd5P46hfXolYpXvchhQEaqjVen_iacSguAo9h0Tm8qq0LJtzpR0NHmSezI4oxsQGV3xFKGILGR-DDozIB0A",
+						"value": "{{refresh_token_0}}",
 						"type": "text"
 					}
 				],
 				"url": {
-					"raw": "http://127.0.0.1:8080/api/ml/",
-					"protocol": "http",
+					"raw": "{{url}}/auth/refresh/",
 					"host": [
-						"127",
-						"0",
-						"0",
-						"1"
+						"{{url}}"
 					],
-					"port": "8080",
+					"path": [
+						"auth",
+						"refresh",
+						""
+					]
+				}
+			},
+			"response": [
+				{
+					"name": "auth_refresh_1_success",
+					"originalRequest": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{refresh_token_0}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{url}}/auth/refresh/",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"auth",
+								"refresh",
+								""
+							]
+						}
+					},
+					"status": "OK",
+					"code": 200,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Server",
+							"value": "Werkzeug/3.0.4 Python/3.11.9"
+						},
+						{
+							"key": "Date",
+							"value": "Thu, 24 Oct 2024 16:45:49 GMT"
+						},
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						},
+						{
+							"key": "Content-Length",
+							"value": "1718"
+						},
+						{
+							"key": "Access-Control-Allow-Origin",
+							"value": "localhost"
+						},
+						{
+							"key": "Connection",
+							"value": "close"
+						}
+					],
+					"cookie": [],
+					"body": "[\n    \"Bearer eyJhbGciOiJSUzUxMiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJNTEFQSUFTIiwiYXVkIjoiYWNjZXNzIiwic3ViIjoiQ2xpZW50QTE3Mjk3ODgzNDciLCJpYXQiOjE3Mjk3ODgzNDksImV4cCI6MTcyOTc5MTk0OX0.ZXs9zXuTHs_oTxODkH9QVb0uH36nkT171wGFBKxnIvyGusdUCIyMPMBI7TcWfZaNpBDG4mBjJN-GdNoqA8DLmsLIXsh2KOf9HMD-K6aN4w5oPPDsn6yNpug0NXnZ3pytZRxz6e0WB8fcdTbB9h42IyCeuRnTxigI4rcLGCExZuvYK1-zZAs8vg29pL0V1hCmV839DkUrOsyzTWiyGEobzQwZ_eR_sY9PVVLABAhYHCu7lCIPzDU1jo9rKkANsYk7nPH2PXJC2a_jElvrswsTvTrgaHQ86rn3hj50LbhSgn_bm3aMQUGNx_sRVxna51Nbk3nMTPkKHGOVDzW3MbGzZLiZdMCpdvoWTfhd3U7I9kp5HXxNczRABEdP96mEcf8IsA6CWZwSk_ZifRay57YbKfeswuG6H28cMB0fsMboy4NSTbxfesIdgGTLkZzHsdpoEoRqbQGOUuvDpSsshw09UvoHDmXdAQYjv6WQkOz6cgW0J_rVtLcHb0Fq2ApD1PogZtg-bTBTu5Oo_REnvpOXSv3rVXOzBP8eZYHiw6QM-yze3tWfB2Xt97kG2NQF9AB2y29sdSFLM0v0WKkB0BiApu-tGmpYbZyFyeSl0xo6bA4yQHklnBoZHKrFPjwpjQkpi6Z_z--ulR5wksmEyq8h7EPSRDgksznmeBK3E0z013U\",\n    \"Bearer eyJhbGciOiJSUzUxMiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJNTEFQSUFTIiwiYXVkIjoicmVmcmVzaCIsInN1YiI6IkNsaWVudEExNzI5Nzg4MzQ3IiwiaWF0IjoxNzI5Nzg4MzQ5LCJleHAiOjE3Mjk4NzQ3NDl9.UxOn2HweUNADyi0XbMavZ6Ws7iHLs9CECONMJPDV9XMT8adBe14d5qlhIKA058hCQp5cmXSYEybnPUZTSQyAloxzzxudWWLLx9wTZKaIKSZ-F4GmPADYPg9MQc4PoepZIPh3lJ9PIFpm4hcy2YqGryAlXErozoTRXsK13C-4Zb7sz1IyIKbayAzZxF2KCSDZMg-PQwHbjgA_juc-mjfuzlOm5gXKbsIr-XA4DOAqRry_kf3cUBgDn0Ix8PErjj0g6hn22WrBlHt7snPqJbv1Z_FSCO0cRAmwApRpsSQnpM7a5jOqXZdIZmTogrO7Gs0afZrY9tp5cnePHxIhB3HhwyTBtc_nplw1dkQXilS08Cu8mYvCGj8unWYsSwT6yT5xE6A127pWSG9V2dkkSp11WymzPZObUJxQAuOfIO4FZ3ujTTtQqX5JwyeqM2cqe6oSe4L3dIeCacXZ40QX88J3XYfxkjg8ktiIhv2VG5fcY97JMRyaGRu8d9r_yqrv8qXpTEkcVi6PyuLjfOSCQMI-j4eOY2XGKiSjcPTPmwlF7T0qby59szXk5kMOJCX2VXxSMzELLo7K41VrzkkPhKP5tKtn1bUaYr9Bo80YBVxsCgXVP2r8cukyejlksdevzNUH3d2ZU0DLIiEf4Slskz2PxxCqRDOJ66XhgHevWyfhaeM\"\n]"
+				}
+			]
+		},
+		{
+			"name": "api_ml_get_success",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", () => {\r",
+							"    pm.expect(pm.response.code).to.eql(200);\r",
+							"});\r",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "{{access_token_1}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{url}}/api/ml/",
+					"host": [
+						"{{url}}"
+					],
 					"path": [
 						"api",
 						"ml",
@@ -109,26 +270,21 @@
 			},
 			"response": [
 				{
-					"name": "GetRequest",
+					"name": "api_ml_get_success",
 					"originalRequest": {
 						"method": "GET",
 						"header": [
 							{
 								"key": "Authorization",
-								"value": "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJNTEFQSUF1dGhNYW5hZ2VyIiwiaWF0IjoxNjkzODM2MDE1LCJleHAiOjE2OTM5MjI0MTQsInN1YiI6IkV4dGVybmFsVXNlckEifQ.PtOqnAvGi_VuBfH3J70F5oHB94N2aPyAkAu1j__TM7JFI8kFDCtwHUgXntSFghKBPnEP_w5v78V5e5Hd3RwLkz8GycdNCYiMESXgoamO9vWzxTe2kXUC1uXnl5XpoyLGVpY8yDsNnjIUHYVSLCg2kxSyE1aRpu5Ish-AxnmYulqRCgw8hg-MKFwmyCRwiN2ffP6yJBDbSLVGDR0GtJjXLLGi2QErfudbnucWo69u3FDrmCaJ7_TUF5ZooJ36ZzcurAaLd5P46hfXolYpXvchhQEaqjVen_iacSguAo9h0Tm8qq0LJtzpR0NHmSezI4oxsQGV3xFKGILGR-DDozIB0A",
+								"value": "{{access_token_1}}",
 								"type": "text"
 							}
 						],
 						"url": {
-							"raw": "http://127.0.0.1:8080/api/ml/",
-							"protocol": "http",
+							"raw": "{{url}}/api/ml/",
 							"host": [
-								"127",
-								"0",
-								"0",
-								"1"
+								"{{url}}"
 							],
-							"port": "8080",
 							"path": [
 								"api",
 								"ml",
@@ -138,42 +294,166 @@
 					},
 					"status": "OK",
 					"code": 200,
-					"_postman_previewlanguage": "html",
+					"_postman_previewlanguage": "json",
 					"header": [
 						{
-							"key": "Access-Control-Allow-Origin",
-							"value": "localhost"
+							"key": "Server",
+							"value": "Werkzeug/3.0.4 Python/3.11.9"
 						},
 						{
-							"key": "Content-Length",
-							"value": "113"
+							"key": "Date",
+							"value": "Thu, 24 Oct 2024 16:45:52 GMT"
 						},
 						{
 							"key": "Content-Type",
 							"value": "text/html; charset=utf-8"
 						},
 						{
-							"key": "Date",
-							"value": "Mon, 04 Sep 2023 14:42:18 GMT"
+							"key": "Content-Length",
+							"value": "108"
 						},
 						{
-							"key": "Server",
-							"value": "waitress"
+							"key": "Access-Control-Allow-Origin",
+							"value": "localhost"
+						},
+						{
+							"key": "Connection",
+							"value": "close"
 						}
 					],
 					"cookie": [],
-					"body": "<h1>ML Model</h1>\n<p>The utilized model is: DecisionTreeClassifier\n    <br>The class predictions can be: [0 1 2]\n</p>"
+					"body": "<h1>ML Model</h1><p>The utilized model is: RandomForestClassifier<br>The class predictions can be: [0 1]</p>"
 				}
 			]
 		},
 		{
-			"name": "PostRequestOne",
+			"name": "auth_refresh_2_success",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", () => {\r",
+							"    pm.expect(pm.response.code).to.eql(200);\r",
+							"});\r",
+							"\r",
+							"pm.collectionVariables.set(\"refresh_token_2\", pm.response.json()[1])\r",
+							"pm.collectionVariables.set(\"access_token_2\", pm.response.json()[0])\r",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
 			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "{{refresh_token_1}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{url}}/auth/refresh/",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"auth",
+						"refresh",
+						""
+					]
+				}
+			},
+			"response": [
+				{
+					"name": "auth_refresh_2_success",
+					"originalRequest": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{refresh_token_1}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{url}}/auth/refresh/",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"auth",
+								"refresh",
+								""
+							]
+						}
+					},
+					"status": "OK",
+					"code": 200,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Server",
+							"value": "Werkzeug/3.0.4 Python/3.11.9"
+						},
+						{
+							"key": "Date",
+							"value": "Thu, 24 Oct 2024 16:45:55 GMT"
+						},
+						{
+							"key": "Content-Type",
+							"value": "application/json"
+						},
+						{
+							"key": "Content-Length",
+							"value": "1718"
+						},
+						{
+							"key": "Access-Control-Allow-Origin",
+							"value": "localhost"
+						},
+						{
+							"key": "Connection",
+							"value": "close"
+						}
+					],
+					"cookie": [],
+					"body": "[\n    \"Bearer eyJhbGciOiJSUzUxMiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJNTEFQSUFTIiwiYXVkIjoiYWNjZXNzIiwic3ViIjoiQ2xpZW50QTE3Mjk3ODgzNDciLCJpYXQiOjE3Mjk3ODgzNTUsImV4cCI6MTcyOTc5MTk1NX0.qTYIGs6exbMCI6mCWqNfeNVt0BnadTL1PC3WwG9I27hbv94UxJGylKX1dN691ENY1semG0jvELtGxmUz8TeyRRv6zBI8oI6AGGWCdgC8AW3CVvQB92byvGQ4rBurxbJPkSJoic41IxYR78pDYYPAwb267XZnnrcustMxJaJydTNXu_71_SZTTACKa2WyZVxDzL-zR7qh-Lg5-wy8uoUyr8fdAKXdabf0ShOWJ4lI2LcnRz9Y0oel4Cs_YFKgiFHMioICqZ1eViUyu3hZ6tvM6GZCTkKWbWMTG2dWW4cQA96hTxARiRYl4JX6JRuGtOe14Q9NLHo0u65B2TDP9qFi0HdZqEGIv0DB47xbvqfjicY7KllmU11NJbqBXlxjg5hMSn1sqM4wDwpn-jfrOUN4ZpkgVYALIq9ogPAXXLyhg2YlXKkl6hLZv_NZUju59cH28gCw0NBZfr6nwfnYQNYqIHKbOkqNAJFTB_Fk0dM5ZoPJ6WuDd7K-dm44PJKakH1Z4M-rQKziCa6Ct7sZ1LW6OhIO1Lw6schpYf2sPrA0Oim6O4RhDl90eXaUxIZJc59GZeRkzTntfOKMlQzghiylHrOGHCp96CLSQGjwLiCy5Bfmbqyf30ybhZrUEtyzCfKFCNM9R-A5pTR1ZNECCkZErUoSkpeVAtMNfkYTgCMTjfM\",\n    \"Bearer eyJhbGciOiJSUzUxMiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJNTEFQSUFTIiwiYXVkIjoicmVmcmVzaCIsInN1YiI6IkNsaWVudEExNzI5Nzg4MzQ3IiwiaWF0IjoxNzI5Nzg4MzU1LCJleHAiOjE3Mjk4NzQ3NTV9.aU5CBg3i6iEsFslhMM3GDvvezHqXpAtgRWBW2BCi6gbOrdpv4odAeGgsohfGxWG2y3XcD3avWzQSE0hDYL_ObC7L5tMI8nNqci1Pob0rSDiQazIYAptVx9VM7n5E_VvaLD4ob8U3OFEbLtYp9zaPqMXHlzd90LfN0n8vAj_kBGTCfYFzB6Rx1z5mSL3cV17zBFDeNZfpH9KAyu7wpMMFeByJA4L_quX9UOhXS7vC1P6xMcfLgdnGD0u91X-X8bx8ASfQBIuUAM_09c_zbMcaUyuW9Jg4AZS2mdDJn0tL371QDhgr0CihA7LEPnpJnwc3SFMiza_1gyR2C7eIlfeTiOYwAFnSgtwgrMW_hIgPgciYutpu5dN1MkX3d2-Z7f2aZ5Zujv7zfATRkwGVAoFSAbkV5X57utjwMsqzyVZAwjbsgwyf0Ci50JidlWQuNp7KRXm_GJQgA7Et8Wp_MCBrUWNGJf5XRuCfCmdHBezy0pp2jAO13Nhvn70Zyg2rvkeEref36ItrRYxOAUqnSZarjJ717F4VLA0fcZe1pXyElvTqEdVIrm3TThT55ZBBlAMesWpbUfLfXKrdGTv0FjiGKDAC3Tg3lypTFeQ5aN0sVQG3pxT1tI_clz1Zu0uootprX86ZbRxkBOOYQwSxVoVI1g6yq1BWC6za5gEC7S6lqP8\"\n]"
+				}
+			]
+		},
+		{
+			"name": "api_ml_post_one_success",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", () => {\r",
+							"    pm.expect(pm.response.code).to.eql(200);\r",
+							"});\r",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
 				"method": "POST",
 				"header": [
 					{
 						"key": "Authorization",
-						"value": "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJNTEFQSUF1dGhNYW5hZ2VyIiwiaWF0IjoxNjkzODM2MDE1LCJleHAiOjE2OTM5MjI0MTQsInN1YiI6IkV4dGVybmFsVXNlckEifQ.PtOqnAvGi_VuBfH3J70F5oHB94N2aPyAkAu1j__TM7JFI8kFDCtwHUgXntSFghKBPnEP_w5v78V5e5Hd3RwLkz8GycdNCYiMESXgoamO9vWzxTe2kXUC1uXnl5XpoyLGVpY8yDsNnjIUHYVSLCg2kxSyE1aRpu5Ish-AxnmYulqRCgw8hg-MKFwmyCRwiN2ffP6yJBDbSLVGDR0GtJjXLLGi2QErfudbnucWo69u3FDrmCaJ7_TUF5ZooJ36ZzcurAaLd5P46hfXolYpXvchhQEaqjVen_iacSguAo9h0Tm8qq0LJtzpR0NHmSezI4oxsQGV3xFKGILGR-DDozIB0A",
+						"value": "{{access_token_2}}",
 						"type": "text"
 					}
 				],
@@ -187,15 +467,10 @@
 					}
 				},
 				"url": {
-					"raw": "http://127.0.0.1:8080/api/ml/",
-					"protocol": "http",
+					"raw": "{{url}}/api/ml/",
 					"host": [
-						"127",
-						"0",
-						"0",
-						"1"
+						"{{url}}"
 					],
-					"port": "8080",
 					"path": [
 						"api",
 						"ml",
@@ -205,13 +480,13 @@
 			},
 			"response": [
 				{
-					"name": "PostRequestOne",
+					"name": "api_ml_post_one_success",
 					"originalRequest": {
 						"method": "POST",
 						"header": [
 							{
 								"key": "Authorization",
-								"value": "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJNTEFQSUF1dGhNYW5hZ2VyIiwiaWF0IjoxNjkzODM2MDE1LCJleHAiOjE2OTM5MjI0MTQsInN1YiI6IkV4dGVybmFsVXNlckEifQ.PtOqnAvGi_VuBfH3J70F5oHB94N2aPyAkAu1j__TM7JFI8kFDCtwHUgXntSFghKBPnEP_w5v78V5e5Hd3RwLkz8GycdNCYiMESXgoamO9vWzxTe2kXUC1uXnl5XpoyLGVpY8yDsNnjIUHYVSLCg2kxSyE1aRpu5Ish-AxnmYulqRCgw8hg-MKFwmyCRwiN2ffP6yJBDbSLVGDR0GtJjXLLGi2QErfudbnucWo69u3FDrmCaJ7_TUF5ZooJ36ZzcurAaLd5P46hfXolYpXvchhQEaqjVen_iacSguAo9h0Tm8qq0LJtzpR0NHmSezI4oxsQGV3xFKGILGR-DDozIB0A",
+								"value": "{{access_token_2}}",
 								"type": "text"
 							}
 						],
@@ -225,15 +500,10 @@
 							}
 						},
 						"url": {
-							"raw": "http://127.0.0.1:8080/api/ml/",
-							"protocol": "http",
+							"raw": "{{url}}/api/ml/",
 							"host": [
-								"127",
-								"0",
-								"0",
-								"1"
+								"{{url}}"
 							],
-							"port": "8080",
 							"path": [
 								"api",
 								"ml",
@@ -246,24 +516,28 @@
 					"_postman_previewlanguage": "json",
 					"header": [
 						{
-							"key": "Access-Control-Allow-Origin",
-							"value": "localhost"
+							"key": "Server",
+							"value": "Werkzeug/3.0.4 Python/3.11.9"
 						},
 						{
-							"key": "Content-Length",
-							"value": "4"
+							"key": "Date",
+							"value": "Thu, 24 Oct 2024 16:45:59 GMT"
 						},
 						{
 							"key": "Content-Type",
 							"value": "application/json"
 						},
 						{
-							"key": "Date",
-							"value": "Mon, 04 Sep 2023 14:42:24 GMT"
+							"key": "Content-Length",
+							"value": "8"
 						},
 						{
-							"key": "Server",
-							"value": "waitress"
+							"key": "Access-Control-Allow-Origin",
+							"value": "localhost"
+						},
+						{
+							"key": "Connection",
+							"value": "close"
 						}
 					],
 					"cookie": [],
@@ -272,13 +546,31 @@
 			]
 		},
 		{
-			"name": "PostRequestMany",
+			"name": "api_ml_post_many_success",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", () => {\r",
+							"    pm.expect(pm.response.code).to.eql(200);\r",
+							"});\r",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
 			"request": {
+				"auth": {
+					"type": "noauth"
+				},
 				"method": "POST",
 				"header": [
 					{
 						"key": "Authorization",
-						"value": "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJNTEFQSUF1dGhNYW5hZ2VyIiwiaWF0IjoxNjkzODM2MDE1LCJleHAiOjE2OTM5MjI0MTQsInN1YiI6IkV4dGVybmFsVXNlckEifQ.PtOqnAvGi_VuBfH3J70F5oHB94N2aPyAkAu1j__TM7JFI8kFDCtwHUgXntSFghKBPnEP_w5v78V5e5Hd3RwLkz8GycdNCYiMESXgoamO9vWzxTe2kXUC1uXnl5XpoyLGVpY8yDsNnjIUHYVSLCg2kxSyE1aRpu5Ish-AxnmYulqRCgw8hg-MKFwmyCRwiN2ffP6yJBDbSLVGDR0GtJjXLLGi2QErfudbnucWo69u3FDrmCaJ7_TUF5ZooJ36ZzcurAaLd5P46hfXolYpXvchhQEaqjVen_iacSguAo9h0Tm8qq0LJtzpR0NHmSezI4oxsQGV3xFKGILGR-DDozIB0A",
+						"value": "{{access_token_1}}",
 						"type": "text"
 					}
 				],
@@ -292,15 +584,10 @@
 					}
 				},
 				"url": {
-					"raw": "http://127.0.0.1:8080/api/ml/",
-					"protocol": "http",
+					"raw": "{{url}}/api/ml/",
 					"host": [
-						"127",
-						"0",
-						"0",
-						"1"
+						"{{url}}"
 					],
-					"port": "8080",
 					"path": [
 						"api",
 						"ml",
@@ -310,13 +597,13 @@
 			},
 			"response": [
 				{
-					"name": "PostRequestMany",
+					"name": "api_ml_post_many_success",
 					"originalRequest": {
 						"method": "POST",
 						"header": [
 							{
 								"key": "Authorization",
-								"value": "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJNTEFQSUF1dGhNYW5hZ2VyIiwiaWF0IjoxNjkzODM2MDE1LCJleHAiOjE2OTM5MjI0MTQsInN1YiI6IkV4dGVybmFsVXNlckEifQ.PtOqnAvGi_VuBfH3J70F5oHB94N2aPyAkAu1j__TM7JFI8kFDCtwHUgXntSFghKBPnEP_w5v78V5e5Hd3RwLkz8GycdNCYiMESXgoamO9vWzxTe2kXUC1uXnl5XpoyLGVpY8yDsNnjIUHYVSLCg2kxSyE1aRpu5Ish-AxnmYulqRCgw8hg-MKFwmyCRwiN2ffP6yJBDbSLVGDR0GtJjXLLGi2QErfudbnucWo69u3FDrmCaJ7_TUF5ZooJ36ZzcurAaLd5P46hfXolYpXvchhQEaqjVen_iacSguAo9h0Tm8qq0LJtzpR0NHmSezI4oxsQGV3xFKGILGR-DDozIB0A",
+								"value": "{{access_token_1}}",
 								"type": "text"
 							}
 						],
@@ -330,15 +617,10 @@
 							}
 						},
 						"url": {
-							"raw": "http://127.0.0.1:8080/api/ml/",
-							"protocol": "http",
+							"raw": "{{url}}/api/ml/",
 							"host": [
-								"127",
-								"0",
-								"0",
-								"1"
+								"{{url}}"
 							],
-							"port": "8080",
 							"path": [
 								"api",
 								"ml",
@@ -351,30 +633,467 @@
 					"_postman_previewlanguage": "json",
 					"header": [
 						{
-							"key": "Access-Control-Allow-Origin",
-							"value": "localhost"
+							"key": "Server",
+							"value": "Werkzeug/3.0.4 Python/3.11.9"
 						},
 						{
-							"key": "Content-Length",
-							"value": "18"
+							"key": "Date",
+							"value": "Thu, 24 Oct 2024 16:46:01 GMT"
 						},
 						{
 							"key": "Content-Type",
 							"value": "application/json"
 						},
 						{
-							"key": "Date",
-							"value": "Mon, 04 Sep 2023 14:42:27 GMT"
+							"key": "Content-Length",
+							"value": "43"
 						},
 						{
-							"key": "Server",
-							"value": "waitress"
+							"key": "Access-Control-Allow-Origin",
+							"value": "localhost"
+						},
+						{
+							"key": "Connection",
+							"value": "close"
 						}
 					],
 					"cookie": [],
 					"body": "[\n    0,\n    0,\n    0,\n    0,\n    1,\n    1,\n    1,\n    1\n]"
 				}
 			]
+		},
+		{
+			"name": "auth_refresh_fail",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 401\", () => {\r",
+							"    pm.expect(pm.response.code).to.eql(401);\r",
+							"});\r",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "{{refresh_token_1}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{url}}/auth/refresh/",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"auth",
+						"refresh",
+						""
+					]
+				}
+			},
+			"response": [
+				{
+					"name": "auth_refresh_fail",
+					"originalRequest": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{refresh_token_1}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{url}}/auth/refresh/",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"auth",
+								"refresh",
+								""
+							]
+						}
+					},
+					"status": "UNAUTHORIZED",
+					"code": 401,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Server",
+							"value": "Werkzeug/3.0.4 Python/3.11.9"
+						},
+						{
+							"key": "Date",
+							"value": "Thu, 24 Oct 2024 16:46:06 GMT"
+						},
+						{
+							"key": "Content-Type",
+							"value": "text/html; charset=utf-8"
+						},
+						{
+							"key": "Content-Length",
+							"value": "79"
+						},
+						{
+							"key": "Access-Control-Allow-Origin",
+							"value": "localhost"
+						},
+						{
+							"key": "Connection",
+							"value": "close"
+						}
+					],
+					"cookie": [],
+					"body": "<h1>401 Unauthorized</h1><p>You are not authorized to access this resource.</p>"
+				}
+			]
+		},
+		{
+			"name": "api_ml_get_fail",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 401\", () => {\r",
+							"    pm.expect(pm.response.code).to.eql(401);\r",
+							"});\r",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "{{access_token_1}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{url}}/api/ml/",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"api",
+						"ml",
+						""
+					]
+				}
+			},
+			"response": [
+				{
+					"name": "api_ml_get_fail",
+					"originalRequest": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "{{access_token_1}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{url}}/api/ml/",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"api",
+								"ml",
+								""
+							]
+						}
+					},
+					"status": "UNAUTHORIZED",
+					"code": 401,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Server",
+							"value": "Werkzeug/3.0.4 Python/3.11.9"
+						},
+						{
+							"key": "Date",
+							"value": "Thu, 24 Oct 2024 16:46:11 GMT"
+						},
+						{
+							"key": "Content-Type",
+							"value": "text/html; charset=utf-8"
+						},
+						{
+							"key": "Content-Length",
+							"value": "79"
+						},
+						{
+							"key": "Access-Control-Allow-Origin",
+							"value": "localhost"
+						},
+						{
+							"key": "Connection",
+							"value": "close"
+						}
+					],
+					"cookie": [],
+					"body": "<h1>401 Unauthorized</h1><p>You are not authorized to access this resource.</p>"
+				}
+			]
+		},
+		{
+			"name": "auth_reset_fail",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 401\", () => {\r",
+							"    pm.expect(pm.response.code).to.eql(401);\r",
+							"});\r",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "username",
+							"value": "ClientA",
+							"type": "text"
+						},
+						{
+							"key": "password",
+							"value": "YouShouldReplaceTheseCredentials",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "{{url}}/auth/reset/",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						"auth",
+						"reset",
+						""
+					]
+				}
+			},
+			"response": [
+				{
+					"name": "auth_reset_fail",
+					"originalRequest": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "username",
+									"value": "ClientA",
+									"type": "text"
+								},
+								{
+									"key": "password",
+									"value": "YouShouldReplaceTheseCredentials",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{url}}/auth/reset/",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"auth",
+								"reset",
+								""
+							]
+						}
+					},
+					"status": "UNAUTHORIZED",
+					"code": 401,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Server",
+							"value": "Werkzeug/3.0.4 Python/3.11.9"
+						},
+						{
+							"key": "Date",
+							"value": "Thu, 24 Oct 2024 16:46:19 GMT"
+						},
+						{
+							"key": "Content-Type",
+							"value": "text/html; charset=utf-8"
+						},
+						{
+							"key": "Content-Length",
+							"value": "79"
+						},
+						{
+							"key": "Access-Control-Allow-Origin",
+							"value": "localhost"
+						},
+						{
+							"key": "Connection",
+							"value": "close"
+						}
+					],
+					"cookie": [],
+					"body": "<h1>401 Unauthorized</h1><p>You are not authorized to access this resource.</p>"
+				}
+			]
+		},
+		{
+			"name": "healthcheck",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", () => {\r",
+							"    pm.expect(pm.response.code).to.eql(200);\r",
+							"});\r",
+							"\r",
+							"pm.collectionVariables.unset(\"refresh_token_0\");\r",
+							"pm.collectionVariables.unset(\"refresh_token_1\");\r",
+							"pm.collectionVariables.unset(\"access_token_1\");\r",
+							"pm.collectionVariables.unset(\"refresh_token_2\");\r",
+							"pm.collectionVariables.unset(\"access_token_2\");\r",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "noauth"
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{url}}/",
+					"host": [
+						"{{url}}"
+					],
+					"path": [
+						""
+					]
+				}
+			},
+			"response": [
+				{
+					"name": "healthcheck",
+					"originalRequest": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{url}}/",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								""
+							]
+						}
+					},
+					"status": "OK",
+					"code": 200,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "Server",
+							"value": "Werkzeug/3.0.4 Python/3.11.9"
+						},
+						{
+							"key": "Date",
+							"value": "Thu, 24 Oct 2024 16:46:37 GMT"
+						},
+						{
+							"key": "Content-Type",
+							"value": "text/html; charset=utf-8"
+						},
+						{
+							"key": "Content-Length",
+							"value": "57"
+						},
+						{
+							"key": "Access-Control-Allow-Origin",
+							"value": "localhost"
+						},
+						{
+							"key": "Connection",
+							"value": "close"
+						}
+					],
+					"cookie": [],
+					"body": "<h1>Health Check</h1><p>Resources are up and running.</p>"
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "url",
+			"value": "http://127.0.0.1:8080",
+			"type": "string"
 		}
 	]
 }
