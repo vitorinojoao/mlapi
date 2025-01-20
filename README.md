@@ -6,16 +6,18 @@ Copyright (c) 2024 João Vitorino
 ## Overview
 
 To deploy ML models in a web server and securely access their predictions,  
-you can use this template and improve the API to better suit your needs.  
+you can use this API template and improve it to better suit your needs.  
 
 The `app.py` is the main Python file with the creation of a Flask application,  
-the initialization of several blueprints, and the setup of the default routes of the API.  
+the initialization of several blueprints, and the setup of the default routes.  
 
 The template is divided into three folders:
 
 - **mlapi** - the entire Python code of the API with useful comments (e.g., blueprints and objects).
 - **resources** - the resources required for the API to work properly (e.g., models and encodings).
 - **files** - supplementary files to help you interact with the API (e.g., commands and requests).
+
+![Overview](https://raw.githubusercontent.com/vitorinojoao/mlapi/main/files/overview.png)
 
 ## Important Notes
 
@@ -34,7 +36,7 @@ A JWT authorization scheme with RSA signatures is implemented, but it must be us
 You should ensure that every route requires an `Authorization header` and validates the token.  
 After a reset, each client can use long-lived refresh tokens to get new temporary access tokens.  
 
-![MLAPI](https://raw.githubusercontent.com/vitorinojoao/mlapi/main/files/mlapidiagram.png)
+![Scheme](https://raw.githubusercontent.com/vitorinojoao/mlapi/main/files/scheme.png)
 
 ## Sample Code
 
@@ -52,4 +54,4 @@ You can use and improve the code of `data_postprocessor.py`.
 
 &rarr; **How to send multiple requests to different routes?**  
 Several GET and POST requests can be sent by each client, as long as they use valid tokens.  
-You can see the possible requests in `mlapirequests.postman_collection.json`.  
+You can see the possible requests in `mlapirequests.json`.  
