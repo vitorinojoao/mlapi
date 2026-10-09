@@ -5,14 +5,18 @@ secrets/
 *.crt
 *.pem
 
-# --------------------- #
-# Template Environments #
-# --------------------- #
-# SHOULD BE UNCOMMENTED #
-# --------------------- #
+# -------------------------------- #
+# Template Environment and Scripts #
+# -------------------------------- #
+# SHOULD BE UNCOMMENTED
+# -------------------------------- #
 #.env
 #.venv
-# --------------------- #
+# Makefile
+# *.bat
+# *.sh
+# *.bash
+# -------------------------------- #
 
 # Environments
 env/
@@ -20,12 +24,6 @@ venv/
 ENV/
 env.bak/
 venv.bak/
-
-# Script files
-Makefile
-*.bat
-*.sh
-*.bash
 
 # Flask files
 instance/
