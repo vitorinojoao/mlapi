@@ -1,7 +1,7 @@
 # Machine Learning API
 
 A template of a secure Application Programming Interface for Machine Learning models.  
-Copyright (c) 2024 João Vitorino  
+Copyright (c) 2024-2026 João Vitorino  
 
 ## Overview
 
@@ -18,25 +18,6 @@ The template is divided into three folders:
 - **files** - supplementary files to help you interact with the API (e.g., commands and requests).
 
 ![Overview](https://raw.githubusercontent.com/vitorinojoao/mlapi/main/files/overview.png)
-
-## Important Notes
-
-&rarr; **The run.py CLI command starts a development server!**  
-The `run.py` can be used for a development server and also as the entry point of a production server.  
-You should check the commands in `CLIrun.txt`.  
-For production, you should use HTTPS with a valid TLS certificate and Nginx or a similar proxy server.  
-
-&rarr; **A daemon service automatically starts the server!**  
-The `mlapidaemon.service` can be used to run the server at boot and automatically restart it.  
-You should check the commands in `CLIdaemon.txt`.  
-It has missing information that must be specified according to the characteristics of a system.  
-
-&rarr; **An API is only as secure as its authorization scheme!**  
-A JWT authorization scheme with RSA signatures is implemented, but it must be used properly.  
-You should ensure that every route requires an `Authorization header` and validates the token.  
-After a reset, each client can use long-lived refresh tokens to get new temporary access tokens.  
-
-![Scheme](https://raw.githubusercontent.com/vitorinojoao/mlapi/main/files/scheme.png)
 
 ## Sample Code
 
@@ -55,3 +36,51 @@ You can use and improve the code of `data_postprocessor.py`.
 &rarr; **How to send multiple requests to different routes?**  
 Several GET and POST requests can be sent by each client, as long as they use valid tokens.  
 You can see the possible requests in `mlapirequests.json`.  
+
+## Docker Secrets
+
+mkdir -p secrets
+chmod 700 secrets
+
+umask 077
+openssl rand -hex 32 > secrets/postgres_admin_password
+openssl rand -hex 32 > secrets/auth_db_password
+openssl rand -hex 32 > secrets/config_db_password
+openssl rand -hex 32 > secrets/data_db_password
+
+chmod 600 secrets/*
+
+## Docker Commands
+
+Validate configuration
+docker compose config --quiet
+
+Build all three images
+docker compose build
+
+Start services in the background
+docker compose up -d
+
+Check status and health
+docker compose ps
+
+Inspect logs
+docker compose logs --tail=100 nginx api db
+
+## Local DNS Configuration
+
+1: Point api.home.arpa to the Docker host's IP address in your local DNS server or the hosts file on your client
+
+2: Export the public CA certificate for installation on client devices
+docker compose cp nginx:/etc/nginx/tls/local-ca.crt ./local-ca.crt
+
+3: Install local-ca.crt into the client's trusted root certificate store. Never distribute local-ca.key
+
+4: Test HTTPS
+curl --fail --show-error https://api.home.arpa/health
+
+5: If DNS is not yet configured, test using the host IP while explicitly setting the hostname
+curl --resolve api.home.arpa:443:127.0.0.1 https://api.home.arpa/health
+
+Replace 127.0.0.1 with the correct host IP when testing from another machine
+Do not use curl -k as a permanent workaround for certificate errors
