@@ -10,8 +10,8 @@ from urllib3.util.retry import Retry
 app = Flask(__name__)
 app.config["MAX_CONTENT_LENGTH"] = 5 * 1024 * 1024
 
-BASE_URL = os.environ["APP_CALL_URL_1"].rstrip("/")
-parsed = urlparse(BASE_URL)
+APP_EXTERNAL_URL_1 = os.environ["APP_EXTERNAL_URL_1"].rstrip("/")
+parsed = urlparse(APP_EXTERNAL_URL_1)
 
 if parsed.scheme != "https" or not parsed.hostname or parsed.username or parsed.password:
     raise RuntimeError("External API must be a valid HTTPS URL")
@@ -26,11 +26,11 @@ def secret(name):
 
 def db_config(prefix):
     return {
-        "host": os.environ[prefix + "_DB_HOST"],
+        "port": os.environ["ARG_DB_PORT"],
+        "host": os.environ["ARG_DB_HOST"],
         "dbname": os.environ[prefix + "_DB_NAME"],
         "user": os.environ[prefix + "_DB_USER"],
         "password": secret(prefix + "_DB_PASSWORD"),
-        "port": 5432,
         "connect_timeout": 3,
         "sslmode": "disable",
         "application_name": "secure-flask-api",
@@ -90,7 +90,7 @@ def example():
 
 def fetch_external_status():
     response = http.get(
-        BASE_URL + "/status",
+        APP_EXTERNAL_URL_1 + "/status",
         timeout=(3, 10),
         allow_redirects=False,
     )
