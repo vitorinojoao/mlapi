@@ -1,29 +1,29 @@
-# gitignore
+## gitignore
 ignore/
 test/
-secrets/
+
+## Secret files
+docker-secrets/
+*.key
 *.crt
 *.pem
 
-# -------------------------------- #
-# Template Environment and Scripts #
-# -------------------------------- #
-# SHOULD BE UNCOMMENTED
-# -------------------------------- #
-#.env
-#.venv
-# Makefile
-# *.bat
-# *.sh
-# *.bash
-# -------------------------------- #
-
-# Environments
+## Environment files
+## .env ## should be uncommented
+.venv
 env/
 venv/
-ENV/
 env.bak/
 venv.bak/
+
+## Python files
+__pycache__/
+.pytest_cache/
+*.pyc
+*.pyd
+*.pyo
+
+# --------------------
 
 # Flask files
 instance/
@@ -31,7 +31,9 @@ instance/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
-*.py[cod]
+*.pyc
+*.pyd
+*.pyo
 *$py.class
 
 # C extensions

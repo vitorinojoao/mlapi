@@ -1,54 +1,40 @@
 name: mlapi
 
-services:
-  nginx:
-    build: ./mlapi-nginx
-    restart: unless-stopped
-    init: true
-    ports:
-      - "${HTTPS_PORT:-443}:443"
-    environment:
-      DOMAIN: "${DOMAIN:?Set DOMAIN in .env}"
-    volumes:
-      - tls-certs:/etc/nginx/tls
-    read_only: true
-    tmpfs:
-      - /etc/nginx/conf.d:size=1m,mode=0755
-      - /var/cache/nginx:size=16m,mode=0750
-      - /var/run:size=2m,mode=0755
-      - /tmp:size=8m,mode=1777
-    cap_drop: [ALL]
-    cap_add: [CHOWN, SETUID, SETGID, NET_BIND_SERVICE]
-    security_opt:
-      - no-new-privileges:true
-    mem_limit: 128m
-    cpus: 0.50
-    pids_limit: 64
-    healthcheck:
-      test: ["CMD", "nginx", "-t"]
-      interval: 60s
-      timeout: 5s
-      retries: 5
-      start_period: 60s
-    logging:
-      driver: json-file
-      options:
-        max-size: "5m"
-        max-file: "2"
-    depends_on:
-      api:
-        condition: service_healthy
-    networks: [edge]
+networks:
+  edge-network:
+    driver: bridge
+  internal-network:
+    driver: bridge
+    internal: true
 
-  api:
-    build: ./mlapi-flask
+volumes:
+  nginx-volume:
+  db-volume:
+
+secrets:
+  postgres_admin_password:
+    file: ./docker-secrets/postgres_admin_password
+  auth_db_password:
+    file: ./docker-secrets/auth_db_password
+  config_db_password:
+    file: ./docker-secrets/config_db_password
+  data_db_password:
+    file: ./docker-secrets/data_db_password
+
+services:
+  ## Flask Application
+  app-service:
     restart: unless-stopped
-    init: true
+    build:
+      context: ./mlapi-app
+      args:
+        - ARG_APP_PORT: "${ARG_APP_PORT:?Set APP_PORT in .env}"
+        - ARG_APP_WORKERS: "${ARG_APP_WORKERS:-3}"
+        - ARG_APP_TIMEOUT: "${ARG_APP_TIMEOUT:-30}"
+        - ARG_APP_GRACEFUL: "${ARG_APP_GRACEFUL:-10}"
     environment:
-      PYTHONDONTWRITEBYTECODE: "1"
-      PYTHONUNBUFFERED: "1"
-      GUNICORN_WORKERS: "${GUNICORN_WORKERS:-2}"
-      EXTERNAL_API_BASE_URL: "${EXTERNAL_API_BASE_URL:?Set external API URL}"
+      APP_CALL_URL_1: "${APP_CALL_URL_1:?Set APP_CALL_URL_1 in .env}"
+      APP_CALL_URL_2: "${APP_CALL_URL_2:?Set APP_CALL_URL_2 in .env}"
       AUTH_DB_HOST: db
       AUTH_DB_NAME: auth
       AUTH_DB_USER: auth_app
@@ -65,7 +51,9 @@ services:
       - auth_db_password
       - config_db_password
       - data_db_password
-    expose: ["8000"]
+    init: true
+    networks: [edge-network, internal-network]
+    expose: ["${ARG_APP_PORT:?Set APP_PORT in .env}"]
     read_only: true
     tmpfs:
       - /tmp:size=32m,mode=1777
@@ -73,9 +61,9 @@ services:
     cap_drop: [ALL]
     security_opt:
       - no-new-privileges:true
-    mem_limit: 384m
-    cpus: 1.00
-    pids_limit: 100
+    depends_on:
+      db-service:
+        condition: service_healthy
     healthcheck:
       test:
         - CMD
@@ -89,17 +77,13 @@ services:
     logging:
       driver: json-file
       options:
-        max-size: "5m"
-        max-file: "2"
-    depends_on:
-      db:
-        condition: service_healthy
-    networks: [edge, database]
+        max-size: "50m"
+        max-file: "3"
 
-  db:
-    build: ./mlapi-postgresql
+  ## PostgreSQL Database
+  db-service:
     restart: unless-stopped
-    init: true
+    build: ./mlapi-db
     environment:
       POSTGRES_USER: postgres_admin
       POSTGRES_PASSWORD_FILE: /run/secrets/postgres_admin_password
@@ -110,11 +94,13 @@ services:
       - auth_db_password
       - config_db_password
       - data_db_password
-    volumes:
-      - pg-data:/var/lib/postgresql
+    init: true
+    networks: [internal-network]
     expose: ["5432"]
-    shm_size: 128mb
     read_only: true
+    volumes:
+      - db-volume:/var/lib/postgresql
+    shm_size: 128mb
     tmpfs:
       - /tmp:size=32m,mode=1777
       - /var/run/postgresql:size=8m,mode=3775
@@ -122,9 +108,6 @@ services:
     cap_add: [CHOWN, SETUID, SETGID, DAC_OVERRIDE, FOWNER]
     security_opt:
       - no-new-privileges:true
-    mem_limit: 768m
-    cpus: 1.50
-    pids_limit: 128
     healthcheck:
       test:
         - CMD-SHELL
@@ -136,27 +119,44 @@ services:
     logging:
       driver: json-file
       options:
-        max-size: "5m"
-        max-file: "2"
-    networks: [database]
+        max-size: "50m"
+        max-file: "3"
 
-secrets:
-  postgres_admin_password:
-    file: ./secrets/postgres_admin_password
-  auth_db_password:
-    file: ./secrets/auth_db_password
-  config_db_password:
-    file: ./secrets/config_db_password
-  data_db_password:
-    file: ./secrets/data_db_password
-
-volumes:
-  tls-certs:
-  pg-data:
-
-networks:
-  edge:
-    driver: bridge
-  database:
-    driver: bridge
-    internal: true
+  ## Nginx Reverse Proxy
+  nginx-service:
+    restart: unless-stopped
+    build: ./mlapi-nginx
+    environment:
+      ARG_NGINX_DOMAIN: "${ARG_NGINX_DOMAIN:?Set ARG_NGINX_DOMAIN in .env}"
+      ARG_APP_PORT: "${ARG_APP_PORT:?Set ARG_APP_PORT in .env}"
+    init: true
+    networks: [edge-network]
+    ports:
+      - "${ARG_NGINX_HTTP_PORT:-80}:80"
+      - "${ARG_NGINX_HTTPS_PORT:-443}:443"
+    read_only: true
+    volumes:
+      - nginx-volume:/etc/nginx/tls
+    tmpfs:
+      - /etc/nginx/conf.d:size=1m,mode=0755
+      - /var/cache/nginx:size=16m,mode=0750
+      - /var/run:size=2m,mode=0755
+      - /tmp:size=8m,mode=1777
+    cap_drop: [ALL]
+    cap_add: [CHOWN, SETUID, SETGID, NET_BIND_SERVICE]
+    security_opt:
+      - no-new-privileges:true
+    depends_on:
+      app-service:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "nginx", "-t"]
+      interval: 60s
+      timeout: 5s
+      retries: 5
+      start_period: 60s
+    logging:
+      driver: json-file
+      options:
+        max-size: "50m"
+        max-file: "3"

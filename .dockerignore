@@ -1,9 +1,31 @@
+## dockerignore
+ignore/
+test/
+
+## Repository files
+*.md
+*.rst
 .git
-.env
-secrets/
-**/__pycache__/
-**/*.pyc
-**/.venv/
-**/.pytest_cache/
+.gitattributes
+.gitignore
+
+## Secret files
+docker-secrets/
 *.key
+*.crt
 *.pem
+
+## Environment files
+**/.env
+**/.venv
+**/env/
+**/venv/
+**/env.bak/
+**/venv.bak/
+
+## Python files
+**/__pycache__/
+**/.pytest_cache/
+**/*.pyc
+**/*.pyd
+**/*.pyo

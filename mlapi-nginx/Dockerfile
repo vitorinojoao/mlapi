@@ -1,11 +1,11 @@
 FROM nginx:stable-alpine
 
-RUN apk add --no-cache openssl && mkdir -p /etc/nginx/tls
-
-COPY entrypoint.sh /usr/local/bin/cert-entrypoint.sh
+COPY entrypoint.sh /usr/local/bin/nginx-entrypoint.sh
 COPY nginx.conf.template /etc/nginx/templates/default.conf.template
 
-RUN chmod 0755 /usr/local/bin/cert-entrypoint.sh
+RUN chmod 0755 /usr/local/bin/nginx-entrypoint.sh \
+    && mkdir -p /etc/nginx/tls \
+    && apk add --no-cache openssl
 
-ENTRYPOINT ["/usr/local/bin/cert-entrypoint.sh"]
+ENTRYPOINT ["/usr/local/bin/nginx-entrypoint.sh"]
 CMD ["nginx", "-g", "daemon off;"]

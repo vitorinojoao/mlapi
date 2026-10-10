@@ -10,7 +10,7 @@ from urllib3.util.retry import Retry
 app = Flask(__name__)
 app.config["MAX_CONTENT_LENGTH"] = 5 * 1024 * 1024
 
-BASE_URL = os.environ["EXTERNAL_API_BASE_URL"].rstrip("/")
+BASE_URL = os.environ["APP_CALL_URL_1"].rstrip("/")
 parsed = urlparse(BASE_URL)
 
 if parsed.scheme != "https" or not parsed.hostname or parsed.username or parsed.password:
