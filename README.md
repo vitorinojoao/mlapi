@@ -40,47 +40,61 @@ You can see the possible requests in `mlapirequests.json`.
 ## Docker Secrets
 
 mkdir -p secrets
+
 chmod 700 secrets
 
 umask 077
+
 openssl rand -hex 32 > secrets/postgres_admin_password
+
 openssl rand -hex 32 > secrets/auth_db_password
+
 openssl rand -hex 32 > secrets/config_db_password
+
 openssl rand -hex 32 > secrets/data_db_password
 
 chmod 600 secrets/*
 
 ## Docker Commands
 
-Validate configuration
+1: Validate configuration
+
 docker compose config --quiet
 
-Build all three images
+2: Build all three images
+
 docker compose build
 
-Start services in the background
+3: Start services in the background
+
 docker compose up -d
 
-Check status and health
+4: Check status and health
+
 docker compose ps
 
-Inspect logs
-docker compose logs --tail=100 nginx api db
+5: Inspect logs
+
+docker compose logs --tail=100 app-service db-service nginx-service
 
 ## Local DNS Configuration
 
-1: Point api.home.arpa to the Docker host's IP address in your local DNS server or the hosts file on your client
+1: Point mlapi.home.arpa to the Docker host's IP address in your local DNS server or the hosts file on your client
 
 2: Export the public CA certificate for installation on client devices
+
 docker compose cp nginx:/etc/nginx/tls/local-ca.crt ./local-ca.crt
 
 3: Install local-ca.crt into the client's trusted root certificate store. Never distribute local-ca.key
 
 4: Test HTTPS
-curl --fail --show-error https://api.home.arpa/health
+
+curl --fail --show-error https://mlapi.home.arpa/health
 
 5: If DNS is not yet configured, test using the host IP while explicitly setting the hostname
-curl --resolve api.home.arpa:443:127.0.0.1 https://api.home.arpa/health
+
+curl --resolve mlapi.home.arpa:443:127.0.0.1 https://mlapi.home.arpa/health
 
 Replace 127.0.0.1 with the correct host IP when testing from another machine
+
 Do not use curl -k as a permanent workaround for certificate errors

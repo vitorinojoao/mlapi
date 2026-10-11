@@ -34,10 +34,10 @@ services:
     build:
       context: ./mlapi-app
       args:
-        - ARG_APP_PORT: "${ARG_APP_PORT:?Set ARG_APP_PORT in .env}"
-        - ARG_APP_WORKERS: "${ARG_APP_WORKERS:-3}"
-        - ARG_APP_TIMEOUT: "${ARG_APP_TIMEOUT:-30}"
-        - ARG_APP_GRACEFUL: "${ARG_APP_GRACEFUL:-10}"
+        ARG_APP_PORT: "${ARG_APP_PORT:?Set ARG_APP_PORT in .env}"
+        ARG_APP_WORKERS: "${ARG_APP_WORKERS:-3}"
+        ARG_APP_TIMEOUT: "${ARG_APP_TIMEOUT:-30}"
+        ARG_APP_GRACEFUL: "${ARG_APP_GRACEFUL:-10}"
     environment:
       ARG_DB_PORT: "${ARG_DB_PORT:?Set ARG_DB_PORT in .env}"
       ARG_DB_HOST: "${ARG_DB_HOST:-db}"
@@ -91,11 +91,11 @@ services:
     build:
       context: ./mlapi-db
       args:
-        - ARG_DB_PORT: "${ARG_DB_PORT:?Set ARG_DB_PORT in .env}"
+        ARG_DB_PORT: "${ARG_DB_PORT:?Set ARG_DB_PORT in .env}"
     environment:
+      POSTGRES_DB: postgres
       POSTGRES_USER: postgres_admin
       POSTGRES_PASSWORD_FILE: /run/secrets/postgres_admin_password
-      POSTGRES_DB: postgres
       POSTGRES_INITDB_ARGS: "--auth-host=scram-sha-256 --auth-local=scram-sha-256"
     secrets:
       - postgres_admin_password
@@ -136,7 +136,10 @@ services:
     build: ./mlapi-nginx
     environment:
       ARG_NGINX_DOMAIN: "${ARG_NGINX_DOMAIN:?Set ARG_NGINX_DOMAIN in .env}"
+      ARG_NGINX_IP: "${ARG_NGINX_IP:?Set ARG_NGINX_IP in .env}"
+      ARG_NGINX_BODY_SIZE: "10m"
       ARG_APP_PORT: "${ARG_APP_PORT:?Set ARG_APP_PORT in .env}"
+      ARG_APP_SERVICE: "app-service"
     init: true
     networks: [edge-network]
     ## Port mapping for 'INTERNET -> nginx' communication

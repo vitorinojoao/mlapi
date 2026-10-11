@@ -8,8 +8,11 @@ ARG ARG_APP_PORT \
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     PIP_NO_CACHE_DIR=1 \
-    PIP_DISABLE_PIP_VERSION_CHECK=1
-
+    PIP_DISABLE_PIP_VERSION_CHECK=1 \
+    ARG_APP_PORT=$ARG_APP_PORT \
+    ARG_APP_WORKERS=$ARG_APP_WORKERS \
+    ARG_APP_TIMEOUT=$ARG_APP_TIMEOUT \
+    ARG_APP_GRACEFUL=$ARG_APP_GRACEFUL
 
 RUN groupadd --system --gid 10001 app \
     && useradd --system --uid 10001 --gid app --home-dir /nonexistent --no-create-home app

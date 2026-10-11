@@ -11,10 +11,11 @@ app = Flask(__name__)
 app.config["MAX_CONTENT_LENGTH"] = 5 * 1024 * 1024
 
 APP_EXTERNAL_URL_1 = os.environ["APP_EXTERNAL_URL_1"].rstrip("/")
-parsed = urlparse(APP_EXTERNAL_URL_1)
+APP_EXTERNAL_URL_2 = os.environ["APP_EXTERNAL_URL_2"].rstrip("/")
 
-if parsed.scheme != "https" or not parsed.hostname or parsed.username or parsed.password:
-    raise RuntimeError("External API must be a valid HTTPS URL")
+# parsed = urlparse(APP_EXTERNAL_URL_1)
+# if parsed.scheme != "https" or not parsed.hostname or parsed.username or parsed.password:
+#     raise RuntimeError("External API must be a valid HTTPS URL")
 
 def secret(name):
     path = os.environ[name + "_FILE"]

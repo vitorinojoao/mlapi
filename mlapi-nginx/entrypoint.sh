@@ -2,12 +2,16 @@
 set -eu
 umask 077
 
-: "${DOMAIN:?DOMAIN is required}"
+: "${ARG_NGINX_DOMAIN:?ARG_NGINX_DOMAIN is required}"
+: "${ARG_NGINX_IP:?ARG_NGINX_IP is required}"
+: "${ARG_NGINX_BODY_SIZE:?ARG_NGINX_BODY_SIZE is required}"
+: "${ARG_APP_PORT:?ARG_APP_PORT is required}"
+: "${ARG_APP_SERVICE:?ARG_APP_SERVICE is required}"
 
 # Accept a simple DNS hostname, not arbitrary OpenSSL or Nginx syntax.
-if ! printf '%s' "$DOMAIN" |
+if ! printf '%s' "$ARG_NGINX_DOMAIN" |
   grep -Eq '^[A-Za-z0-9]([A-Za-z0-9-]{0,61}[A-Za-z0-9])?(\.[A-Za-z0-9]([A-Za-z0-9-]{0,61}[A-Za-z0-9])?)*$'; then
-  echo "Invalid DOMAIN" >&2
+  echo "Invalid ARG_NGINX_DOMAIN" >&2
   exit 1
 fi
 
@@ -56,13 +60,13 @@ if [ "$RENEW" = 1 ]; then
   openssl req -new -sha256 \
     -key "$SERVER_KEY" \
     -out "$TLS/server.csr" \
-    -subj "/CN=$DOMAIN"
+    -subj "/CN=$ARG_NGINX_DOMAIN"
 
   printf '%s\n' \
     'basicConstraints=critical,CA:FALSE' \
     'keyUsage=critical,digitalSignature,keyEncipherment' \
     'extendedKeyUsage=serverAuth' \
-    "subjectAltName=DNS:$DOMAIN" \
+    "subjectAltName=DNS:$ARG_NGINX_DOMAIN" \
     > "$TLS/server.ext"
 
   openssl x509 -req -sha256 -days 365 \
@@ -80,10 +84,10 @@ chmod 600 "$SERVER_KEY"
 chmod 644 "$SERVER_CERT"
 
 openssl verify -CAfile "$CA_CERT" "$SERVER_CERT"
-openssl x509 -in "$SERVER_CERT" -noout -checkhost "$DOMAIN"
+openssl x509 -in "$SERVER_CERT" -noout -checkhost "$ARG_NGINX_DOMAIN"
 openssl x509 -in "$SERVER_CERT" -noout -checkend 86400
 
-envsubst '${DOMAIN}' \
+envsubst '${ARG_NGINX_DOMAIN},${ARG_NGINX_IP},${ARG_NGINX_BODY_SIZE},${ARG_APP_PORT},${ARG_APP_SERVICE}' \
   < /etc/nginx/templates/default.conf.template \
   > /etc/nginx/conf.d/default.conf
 
