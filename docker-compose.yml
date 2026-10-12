@@ -28,7 +28,7 @@ secrets:
     file: ./docker-secrets/data_db_password
 
 services:
-  ## Flask application
+  ## Flask app with Gunicorn WSGI
   app-service:
     restart: unless-stopped
     build:

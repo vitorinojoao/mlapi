@@ -1,6 +1,6 @@
 ## nginx.conf.template
 
-## Forward HTTP requests coming to configured domain/IP address
+## Accept HTTP requests for configured domain/IP address
 server {
     listen 80;
     listen [::]:80;
@@ -33,11 +33,10 @@ server {
 
     location / {
         proxy_pass http://${ARG_APP_SERVICE}:${ARG_APP_PORT};
-
     }
 }
 
-## Default: Immediately close connection for other domains/IP addresses
+## HTTP default: Immediately close connection for other domains/IP addresses
 server {
     listen 80 default_server;
     listen [::]:80 default_server;
@@ -47,7 +46,7 @@ server {
     return 444;
 }
 
-## Forward HTTPS requests coming to configured domain/IP address
+## Accept HTTPS requests for configured domain/IP address
 server {
     listen 443 ssl;
     listen [::]:443 ssl;
@@ -88,11 +87,10 @@ server {
 
     location / {
         proxy_pass http://${ARG_APP_SERVICE}:${ARG_APP_PORT};
-
     }
 }
 
-## Default: Silently drop TLS handshake for other domains/IP addresses
+## HTTPS default: Silently drop TLS handshake for other domains/IP addresses
 server {
     listen 443 ssl default_server;
     listen [::]:443 ssl default_server;

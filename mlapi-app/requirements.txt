@@ -1,4 +1,11 @@
-flask==3.*
+## requirements.txt
+
+## Gunicorn WSGI server
 gunicorn==23.*
+
+## PostgreSQL database connection
 psycopg[binary]==3.*
+
+## Flask app dependencies
+flask==3.*
 requests==2.*
