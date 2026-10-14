@@ -1,11 +1,12 @@
 FROM python:3.12-slim
 
-## Assign Gunicorn WSGI build variables
+## Define Gunicorn build arguments
 ARG ARG_APP_PORT \
     ARG_APP_WORKERS \
     ARG_APP_TIMEOUT \
     ARG_APP_GRACEFUL
 
+## Assign Python and Gunicorn environmental variables
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     PIP_NO_CACHE_DIR=1 \
@@ -15,22 +16,22 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     ARG_APP_TIMEOUT=$ARG_APP_TIMEOUT \
     ARG_APP_GRACEFUL=$ARG_APP_GRACEFUL
 
-## Create new unprivileged user
+## Create unprivileged user 'app'
 RUN groupadd --system --gid 10001 app \
     && useradd --system --uid 10001 --gid app --home-dir /nonexistent --no-create-home app
 
-## Copy necessary files
+## Copy necessary files and change owner
 WORKDIR /app
 
 COPY --chown=10001:10001 requirements.txt ./requirements.txt
 COPY --chown=10001:10001 app.py ./app.py
-COPY --chown=10001:10001 app-source ./app-source
-COPY --chown=10001:10001 app-resources ./app-resources
+COPY --chown=10001:10001 source ./source
+COPY --chown=10001:10001 resources ./resources
 
 ## Install package dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
-## Execute Gunicorn WSGI command as unprivileged user
+## Execute Gunicorn command as unprivileged user
 USER 10001:10001
 
 CMD ["sh", "-c", "exec gunicorn \

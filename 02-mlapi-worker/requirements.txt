@@ -1,0 +1,11 @@
+## requirements.txt
+
+## PostgreSQL database connection
+psycopg[binary]==3.*
+
+## APScheduler dependency
+apscheduler==3.*
+
+## Custom dependencies
+numpy==2.*
+joblib==1.*

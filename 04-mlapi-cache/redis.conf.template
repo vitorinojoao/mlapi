@@ -1,0 +1,27 @@
+## redis.conf.template
+
+## Network and security
+bind 0.0.0.0
+port ${ARG_REDIS_PORT}
+protected-mode yes
+requirepass ${ARG_REDIS_PASSWORD}
+timeout 0
+tcp-keepalive 300
+
+## Memory and limiting
+save ""
+appendonly no
+maxmemory 128mb
+maxmemory-policy noeviction
+
+## Execution and logging 
+daemonize no
+supervised no
+loglevel warning
+
+## Safeguard: Disable unsafe commands
+rename-command FLUSHDB ""
+rename-command FLUSHALL ""
+rename-command CONFIG ""
+rename-command DEBUG ""
+rename-command SHUTDOWN ""

@@ -8,4 +8,11 @@ psycopg[binary]==3.*
 
 ## Flask app dependencies
 flask==3.*
+flask-security==5.*
+flask-sqlalchemy==3.*
+flask-limiter[redis]==4.*
+argon2-cffi==25.*
+
+## Custom dependencies
+numpy==2.*
 requests==2.*

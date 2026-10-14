@@ -93,4 +93,4 @@ envsubst '${ARG_NGINX_DOMAIN},${ARG_NGINX_IP},${ARG_NGINX_BODY_SIZE},${ARG_APP_P
 
 nginx -t
 
-exec "$@"
+exec /docker-entrypoint.sh "$@"
