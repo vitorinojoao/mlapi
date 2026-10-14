@@ -1,23 +1,24 @@
 name: mlapi
 
+## Note: [INTERNET -> proxy] communication is done via port mapping in 'proxy-service'
+
 networks:
-  ## Edge network for 'nginx -> app' and 'app -> EXTERNAL_URL' communication
-  ## Note: 'INTERNET -> nginx' communication is done via port mapping
+  ## Edge network for [proxy -> app], [app -> EXTERNAL_URL] communication
   edge-network:
     driver: bridge
-  ## Isolated network for 'app -> db' communication
+  ## Isolated network for [app -> worker], [app -> cache], [app -> db], [worker -> db] communication
   isolated-network:
     driver: bridge
     internal: true
 
 volumes:
-  ## Persistent volume for nginx private key and server certificate
-  nginx-volume:
-  ## Persistent volume for auth data, config data, and general data
+  ## Persistent volume for reverse proxy's private key and server certificate
+  proxy-volume:
+  ## Persistent volume for primary database
   db-volume:
 
 secrets:
-  ## Secret files
+  ## Secret files for sensitive variables
   postgres_admin_password:
     file: ./docker-secrets/postgres_admin_password
   auth_db_password:
@@ -26,13 +27,15 @@ secrets:
     file: ./docker-secrets/config_db_password
   data_db_password:
     file: ./docker-secrets/data_db_password
+  redis_password:
+    file: ./docker-secrets/redis_password
 
 services:
-  ## Flask app with Gunicorn WSGI
+  ## 01 - Python Flask app with Gunicorn WSGI
   app-service:
     restart: unless-stopped
     build:
-      context: ./mlapi-app
+      context: ./01-mlapi-app
       args:
         ARG_APP_PORT: "${ARG_APP_PORT:?Set ARG_APP_PORT in .env}"
         ARG_APP_WORKERS: "${ARG_APP_WORKERS:-3}"
@@ -52,47 +55,115 @@ services:
       DATA_DB_NAME: data
       DATA_DB_USER: data_app
       DATA_DB_PASSWORD_FILE: /run/secrets/data_db_password
+      API_CATEGORICAL_ENCODING_FILEPATH: "${API_CATEGORICAL_ENCODING_FILEPATH:?Set API_CATEGORICAL_ENCODING_FILEPATH in .env}"
+      TRUSTED_HOSTS: ${DOMAIN:-api.home.arpa},${IP_ADDRESS:-127.0.0.1},localhost,127.0.0.1
+      FLASK_SECRET_KEY_FILE: /run/secrets/flask_secret_key
+      SECURITY_PASSWORD_SALT_FILE: /run/secrets/security_password_salt
+      INITIAL_ADMIN_EMAIL: ${INITIAL_ADMIN_EMAIL:-admin@example.invalid}
+      INITIAL_ADMIN_PASSWORD_FILE: /run/secrets/initial_admin_password
+      SECURITY_TOKEN_TTL_SECONDS: ${SECURITY_TOKEN_TTL_SECONDS:-900}
+      SECURITY_PASSWORD_LENGTH_MIN: ${SECURITY_PASSWORD_LENGTH_MIN:-14}
+      SECURITY_PASSWORD_LENGTH_MAX: ${SECURITY_PASSWORD_LENGTH_MAX:-128}
+      SECURITY_ZXCVBN_MINIMUM_SCORE: ${SECURITY_ZXCVBN_MINIMUM_SCORE:-3}
+      AUTH_FAILURE_LOCKOUT_THRESHOLD: ${AUTH_FAILURE_LOCKOUT_THRESHOLD:-5}
+      AUTH_FAILURE_LOCKOUT_SECONDS: ${AUTH_FAILURE_LOCKOUT_SECONDS:-900}
+      MAX_REQUEST_BYTES: ${MAX_REQUEST_BYTES:-2000000}
+      REDIS_HOST: redis
+      REDIS_PASSWORD_FILE: /run/secrets/redis_password
+      RATE_LIMIT_ENABLED: ${RATE_LIMIT_ENABLED:-true}
+      RATE_LIMIT_STRATEGY: ${RATE_LIMIT_STRATEGY:-moving-window}
+      RATE_LIMIT_DEFAULT: ${RATE_LIMIT_DEFAULT:-120 per minute}
+      RATE_LIMIT_GLOBAL: ${RATE_LIMIT_GLOBAL:-600 per minute}
+      RATE_LIMIT_META: ${RATE_LIMIT_META:-10 per hour}
+      RATE_LIMIT_LOGIN: ${RATE_LIMIT_LOGIN:-5 per minute}
+      RATE_LIMIT_AUTH_MUTATIONS: ${RATE_LIMIT_AUTH_MUTATIONS:-20 per minute}
+      RATE_LIMIT_CREDENTIAL_CHANGES: ${RATE_LIMIT_CREDENTIAL_CHANGES:-5 per hour}
+      RATE_LIMIT_TASK_SUBMIT: ${RATE_LIMIT_TASK_SUBMIT:-10 per minute}
+      RATE_LIMIT_READS: ${RATE_LIMIT_READS:-120 per minute}
+      RATE_LIMIT_ADMIN_READS: ${RATE_LIMIT_ADMIN_READS:-30 per minute}
+      RATE_LIMIT_ADMIN_MUTATIONS: ${RATE_LIMIT_ADMIN_MUTATIONS:-10 per minute}
+      RATE_LIMIT_HEADERS_ENABLED: ${RATE_LIMIT_HEADERS_ENABLED:-false}
+      RATE_LIMIT_KEY_PREFIX: ${RATE_LIMIT_KEY_PREFIX:-secure-task-api}
     secrets:
       - auth_db_password
       - config_db_password
       - data_db_password
     init: true
-    networks: [edge-network, isolated-network]
-    expose: ["${ARG_APP_PORT:?Set ARG_APP_PORT in .env}"]
+    networks:
+      - edge-network
+      - isolated-network
+    expose:
+      - "${ARG_APP_PORT:?Set ARG_APP_PORT in .env}"
     read_only: true
     tmpfs:
-      - /tmp:size=32m,mode=1777
-      - /run:size=4m,mode=0755
+      - /tmp:size=128m,mode=1777
+      - /run:size=16m,mode=0755
     cap_drop: [ALL]
-    security_opt:
-      - no-new-privileges:true
-    depends_on:
-      db-service:
-        condition: service_healthy
+    security_opt: [no-new-privileges:true]
     healthcheck:
-      test:
-        - CMD
-        - python
-        - -c
-        - "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=2)"
+      test: ['CMD', 'python', '-c', 'import urllib.request; urllib.request.urlopen("http://127.0.0.1:8000/health", timeout=5)']
+      start_period: 60s
       interval: 60s
       timeout: 5s
       retries: 5
-      start_period: 60s
+    depends_on:
+      db-service:
+        condition: service_healthy
     logging:
       driver: json-file
       options:
         max-size: "64m"
         max-file: "3"
 
-  ## PostgreSQL database
+  ## 02 - Python worker subprocesses with APScheduler
+  worker-service:
+    restart: unless-stopped
+    build:
+      context: ./02-mlapi-worker
+    environment:
+      DB_HOST: db
+      CONFIG_DB_USER: config_app
+      CONFIG_DB_PASSWORD_FILE: /run/secrets/config_db_password
+      DATA_DB_USER: data_app
+      DATA_DB_PASSWORD_FILE: /run/secrets/data_db_password
+      WORKER_COUNT: ${WORKER_COUNT:-2}
+      WORKER_SLEEP: ${WORKER_SLEEP:-2}
+      API_MODEL_FILEPATH: "${API_MODEL_FILEPATH:?Set API_MODEL_FILEPATH in .env}"
+      API_CONVERT_CLASS_SCORES: "${API_CONVERT_CLASS_SCORES:?Set API_CONVERT_CLASS_SCORES in .env}"
+      API_CONVERT_ANOMALY_SCORES: "${API_CONVERT_ANOMALY_SCORES:?Set API_CONVERT_ANOMALY_SCORES in .env}"
+    secrets:
+      - config_db_password
+      - data_db_password
+    init: true
+    networks:
+      - isolated-network
+    read_only: true
+    tmpfs:
+      - /tmp:size=128m,mode=1777
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+    healthcheck:
+      test: ['CMD-SHELL', 'pgrep -f "python worker.py" > /dev/null || exit 1']
+      start_period: 60s
+      interval: 60s
+      timeout: 5s
+      retries: 5
+    depends_on:
+      db-service:
+        condition: service_healthy
+    logging:
+      driver: json-file
+      options:
+        max-size: "64m"
+        max-file: "3"
+
+  ## 03 - PostgreSQL relational primary database
   db-service:
     restart: unless-stopped
     build:
-      context: ./mlapi-db
-      args:
-        ARG_DB_PORT: "${ARG_DB_PORT:?Set ARG_DB_PORT in .env}"
+      context: ./03-mlapi-db
     environment:
+      PGPORT: "${ARG_DB_PORT:?Set ARG_DB_PORT in .env}"
       POSTGRES_DB: postgres
       POSTGRES_USER: postgres_admin
       POSTGRES_PASSWORD_FILE: /run/secrets/postgres_admin_password
@@ -103,37 +174,72 @@ services:
       - config_db_password
       - data_db_password
     init: true
-    networks: [isolated-network]
-    expose: ["${ARG_DB_PORT:?Set ARG_DB_PORT in .env}"]
+    networks:
+      - isolated-network
+    expose:
+      - "${ARG_DB_PORT:?Set ARG_DB_PORT in .env}"
     read_only: true
     shm_size: 1g
     volumes:
       - db-volume:/var/lib/postgresql
     tmpfs:
-      - /tmp:size=32m,mode=1777
-      - /var/run/postgresql:size=8m,mode=3775
+      - /tmp:size=128m,mode=1777
+      - /var/run/postgresql:size=16m,mode=3775
     cap_drop: [ALL]
     cap_add: [CHOWN, SETUID, SETGID, DAC_OVERRIDE, FOWNER]
-    security_opt:
-      - no-new-privileges:true
+    security_opt: [no-new-privileges:true]
     healthcheck:
-      test:
-        - CMD-SHELL
-        - 'pg_isready -U "$$POSTGRES_USER" -d postgres'
+      test: ['CMD-SHELL', 'pg_isready -U "$$POSTGRES_USER" -d postgres']
+      start_period: 60s
       interval: 60s
       timeout: 5s
       retries: 5
-      start_period: 60s
     logging:
       driver: json-file
       options:
         max-size: "64m"
         max-file: "3"
 
-  ## Nginx reverse proxy
-  nginx-service:
+  ## 04 - Redis distributed in-memory cache
+  cache-service:
     restart: unless-stopped
-    build: ./mlapi-nginx
+    build:
+      context: ./04-mlapi-cache
+      args:
+        ARG_REDIS_PORT: "${ARG_REDIS_PORT:?Set ARG_REDIS_PORT in .env}"
+        ARG_REDIS_PASSWORD_FILE: /run/secrets/redis_password
+    secrets:
+      - redis_password
+    init: true
+    networks:
+      - isolated-network
+    expose:
+      - "${ARG_REDIS_PORT:?Set ARG_REDIS_PORT in .env}"
+    read_only: true
+    volumes:
+      - db-volume:/var/lib/postgresql
+    tmpfs:
+      - /tmp:size=128m,mode=1777
+    cap_drop: [ALL]
+    cap_add: [CHOWN, SETUID, SETGID, DAC_OVERRIDE, FOWNER]
+    security_opt: [no-new-privileges:true]
+    healthcheck:
+      test: ['CMD-SHELL', 'REDISCLI_AUTH="$$(cat /run/secrets/redis_password)" redis-cli ping | grep -q PONG']
+      start_period: 60s
+      interval: 60s
+      timeout: 5s
+      retries: 5
+    logging:
+      driver: json-file
+      options:
+        max-size: "64m"
+        max-file: "3"
+
+  ## Nginx reverse proxy with rate limiting
+  proxy-service:
+    restart: unless-stopped
+    build:
+      context: ./05-mlapi-proxy
     environment:
       ARG_NGINX_DOMAIN: "${ARG_NGINX_DOMAIN:?Set ARG_NGINX_DOMAIN in .env}"
       ARG_NGINX_IP: "${ARG_NGINX_IP:?Set ARG_NGINX_IP in .env}"
@@ -141,32 +247,32 @@ services:
       ARG_APP_PORT: "${ARG_APP_PORT:?Set ARG_APP_PORT in .env}"
       ARG_APP_SERVICE: "app-service"
     init: true
-    networks: [edge-network]
-    ## Port mapping for 'INTERNET -> nginx' communication
+    ## Port mapping for [INTERNET -> proxy] communication
     ports:
       - "${ARG_NGINX_HTTP_PORT:-80}:80"
       - "${ARG_NGINX_HTTPS_PORT:-443}:443"
+    networks:
+      - edge-network
     read_only: true
     volumes:
-      - nginx-volume:/etc/nginx/tls
+      - proxy-volume:/etc/nginx/tls
     tmpfs:
-      - /etc/nginx/conf.d:size=1m,mode=0755
-      - /var/cache/nginx:size=16m,mode=0750
-      - /var/run:size=2m,mode=0755
-      - /tmp:size=8m,mode=1777
+      - /etc/nginx/conf.d:size=2m,mode=0755
+      - /var/cache/nginx:size=64m,mode=0750
+      - /var/run:size=8m,mode=0755
+      - /tmp:size=64m,mode=1777
     cap_drop: [ALL]
     cap_add: [CHOWN, SETUID, SETGID, NET_BIND_SERVICE]
-    security_opt:
-      - no-new-privileges:true
-    depends_on:
-      app-service:
-        condition: service_healthy
+    security_opt: [no-new-privileges:true]
     healthcheck:
-      test: ["CMD", "nginx", "-t"]
+      test: ['CMD', 'nginx', '-t']
+      start_period: 60s
       interval: 60s
       timeout: 5s
       retries: 5
-      start_period: 60s
+    depends_on:
+      app-service:
+        condition: service_healthy
     logging:
       driver: json-file
       options:

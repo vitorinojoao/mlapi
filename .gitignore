@@ -3,13 +3,13 @@ ignore/
 test/
 
 ## Secret files
-## docker-secrets/ ## should be uncommented
+## docker-secrets/ ## Note: should be uncommented
 *.key
 *.crt
 *.pem
 
 ## Environment files
-## .env ## should be uncommented
+## .env ## Note: should be uncommented
 .venv
 env/
 venv/
