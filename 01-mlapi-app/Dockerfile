@@ -24,7 +24,7 @@ RUN groupadd --system --gid 10001 app \
 WORKDIR /app
 
 COPY --chown=10001:10001 requirements.txt ./requirements.txt
-COPY --chown=10001:10001 app.py ./app.py
+COPY --chown=10001:10001 run-app.py ./run-app.py
 COPY --chown=10001:10001 source ./source
 COPY --chown=10001:10001 resources ./resources
 
@@ -44,4 +44,4 @@ CMD ["sh", "-c", "exec gunicorn \
     --max-requests-jitter 100 \
     --access-logfile - \
     --error-logfile - \
-    app:app"]
+    run-app:app"]

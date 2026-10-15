@@ -1,7 +1,10 @@
-import json, os, time
-from pathlib import Path
+"""db_adapter"""
+
+import os
+import time
 import psycopg
 from psycopg.rows import dict_row
+from pathlib import Path
 
 
 def secret(name, required=True):
@@ -10,7 +13,8 @@ def secret(name, required=True):
         try:
             value = Path(path).read_text().strip()
         except OSError:
-            if required: raise
+            if required:
+                raise
             return ""
     else:
         value = os.getenv(name, "").strip()
@@ -21,22 +25,29 @@ def secret(name, required=True):
 
 def connect(dbname, user, password, *, autocommit=False):
     return psycopg.connect(
-        host=os.getenv("DB_HOST", "db"), port=int(os.getenv("DB_PORT", "5432")),
-        dbname=dbname, user=user, password=password,
-        connect_timeout=5, application_name=os.getenv("APP_NAME", "task-platform"),
-        autocommit=autocommit, row_factory=dict_row,
+        host=os.getenv("DB_HOST", "db"),
+        port=int(os.getenv("DB_PORT", "5432")),
+        dbname=dbname,
+        user=user,
+        password=password,
+        connect_timeout=5,
+        application_name=os.getenv("APP_NAME", "task-platform"),
+        autocommit=autocommit,
+        row_factory=dict_row,
     )
 
 
 def db_credentials(prefix):
     return secret(prefix + "_DB_USER"), secret(prefix + "_DB_PASSWORD")
 
+
 def retry_init(fn, attempts=40):
     last = None
     for _ in range(attempts):
         try:
-            fn(); return
+            fn()
+            return
         except Exception as exc:
-            last = exc; time.sleep(2)
+            last = exc
+            time.sleep(2)
     raise RuntimeError("Database initialization timed out") from last
-

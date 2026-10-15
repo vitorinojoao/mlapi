@@ -1,6 +1,8 @@
 ## gitignore
 ignore/
+ignored/
 test/
+tests/
 
 ## Secret files
 ## docker-secrets/ ## Note: should be uncommented

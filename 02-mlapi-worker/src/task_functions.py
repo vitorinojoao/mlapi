@@ -1,11 +1,32 @@
-"""Each process loop claims tasks with SKIP LOCKED; WORKER_COUNT controls parallel workers"""
+"""task_functions"""
+
+## Each process loop claims tasks with SKIP LOCKED; WORKER_COUNT controls parallel workers
 
 import logging, os, time, uuid
 from psycopg.types.json import Jsonb
 
 from source.db_adapter import secret, connect
 
-logging.basicConfig(level=os.getenv("LOG_LEVEL","INFO"), format="%(asctime)s %(levelname)s %(message)s")
+
+def main():
+    while True:
+        try:
+            log.info("worker")
+            # conf=get_config(); cleanup(conf)
+            # desired=conf["worker_count"]
+            # threads=[t for t in threading.enumerate() if t.name.startswith("task-worker-") and t.is_alive()]
+            # for i in range(len(threads),desired):
+            #     threading.Thread(target=worker_loop,args=(i+1,),daemon=True,name=f"task-worker-{i+1}").start()
+            # time.sleep(max(5,conf["worker_sleep_seconds"]))
+        except Exception:
+            log.exception("manager loop error")
+        
+        time.sleep(10)
+
+
+        
+        
+logging.basicConfig(level=os.getenv("LOG_LEVEL","WARNING"), format="%(asctime)s %(levelname)s %(message)s")
 log=logging.getLogger("task-manager")
 
 def creds(prefix): return secret(prefix+"_DB_USER"), secret(prefix+"_DB_PASSWORD")

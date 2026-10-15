@@ -1,6 +1,8 @@
 ## dockerignore
 ignore/
+ignored/
 test/
+tests/
 
 ## Repository files
 *.md

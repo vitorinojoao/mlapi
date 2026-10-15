@@ -14,7 +14,7 @@ RUN groupadd --system --gid 10002 worker \
 WORKDIR /worker
 
 COPY --chown=10002:10002 requirements.txt ./requirements.txt
-COPY --chown=10002:10002 worker.py ./worker.py
+COPY --chown=10002:10002 run-worker.py ./run-worker.py
 COPY --chown=10002:10002 source ./source
 COPY --chown=10002:10002 resources ./resources
 
@@ -24,4 +24,4 @@ RUN pip install --no-cache-dir -r requirements.txt
 ## Execute worker command as unprivileged user
 USER 10002:10002
 
-CMD ["python", "worker.py"]
+CMD ["python", "run-worker.py"]
