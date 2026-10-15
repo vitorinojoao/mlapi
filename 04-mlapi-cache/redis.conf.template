@@ -19,7 +19,7 @@ daemonize no
 supervised no
 loglevel warning
 
-## Safeguard: Disable unsafe commands
+## Note: Dangerous commands are disabled
 rename-command FLUSHDB ""
 rename-command FLUSHALL ""
 rename-command CONFIG ""

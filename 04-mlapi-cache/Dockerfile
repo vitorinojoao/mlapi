@@ -2,7 +2,7 @@ FROM redis:8-alpine
 
 ## Copy necessary files and change owner
 COPY entrypoint.sh /usr/local/bin/redis-entrypoint.sh
-COPY redis.conf.template /usr/local/etc/redis/redis.conf.template
+COPY redis.conf.template /usr/local/etc/redis-templates/redis.conf.template
 
 ## Assign permissions
 RUN chmod 0755 /usr/local/bin/redis-entrypoint.sh \

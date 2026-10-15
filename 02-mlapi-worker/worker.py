@@ -10,12 +10,18 @@ log=logging.getLogger("task-manager")
 def main():
     while True:
         try:
-            conf=get_config(); cleanup(conf)
-            desired=conf["worker_count"]
-            threads=[t for t in threading.enumerate() if t.name.startswith("task-worker-") and t.is_alive()]
-            for i in range(len(threads),desired):
-                threading.Thread(target=worker_loop,args=(i+1,),daemon=True,name=f"task-worker-{i+1}").start()
-            time.sleep(max(5,conf["worker_sleep_seconds"]))
-        except Exception: log.exception("manager loop error"); time.sleep(5)
+            log.info("worker")
+            # conf=get_config(); cleanup(conf)
+            # desired=conf["worker_count"]
+            # threads=[t for t in threading.enumerate() if t.name.startswith("task-worker-") and t.is_alive()]
+            # for i in range(len(threads),desired):
+            #     threading.Thread(target=worker_loop,args=(i+1,),daemon=True,name=f"task-worker-{i+1}").start()
+            # time.sleep(max(5,conf["worker_sleep_seconds"]))
+        except Exception:
+            log.exception("manager loop error")
         
-if __name__=="__main__": main()
+        time.sleep(10)
+        
+if __name__=="__main__":
+    main()
+

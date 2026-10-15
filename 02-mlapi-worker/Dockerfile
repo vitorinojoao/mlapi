@@ -15,7 +15,7 @@ WORKDIR /worker
 
 COPY --chown=10002:10002 requirements.txt ./requirements.txt
 COPY --chown=10002:10002 worker.py ./worker.py
-COPY --chown=10002:10002 resources ./source
+COPY --chown=10002:10002 source ./source
 COPY --chown=10002:10002 resources ./resources
 
 ## Install package dependencies

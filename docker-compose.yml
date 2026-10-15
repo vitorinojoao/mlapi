@@ -1,9 +1,13 @@
 name: mlapi
 
-## Note: [INTERNET -> proxy] communication is done via port mapping in 'proxy-service'
+## --------------------------
+## 00 - Docker infrastructure
+## --------------------------
+
+## Note: INBOUND communication only allowed in 'proxy-service' via port mapping
 
 networks:
-  ## Edge network for [proxy -> app], [app -> EXTERNAL_URL] communication
+  ## Edge network for [proxy -> app], [app -> OUTBOUND] communication
   edge-network:
     driver: bridge
   ## Isolated network for [app -> worker], [app -> cache], [app -> db], [worker -> db] communication
@@ -12,10 +16,12 @@ networks:
     internal: true
 
 volumes:
-  ## Persistent volume for reverse proxy's private key and server certificate
+  ## Persistent volume for reverse proxy SSL/TLS certificates
   proxy-volume:
-  ## Persistent volume for primary database
+    driver: local
+  ## Persistent volume for primary relational database
   db-volume:
+    driver: local
 
 secrets:
   ## Secret files for sensitive variables
@@ -31,7 +37,9 @@ secrets:
     file: ./docker-secrets/redis_password
 
 services:
+  ## ----------------------------------------
   ## 01 - Python Flask app with Gunicorn WSGI
+  ## ----------------------------------------
   app-service:
     restart: unless-stopped
     build:
@@ -94,28 +102,35 @@ services:
       - isolated-network
     expose:
       - "${ARG_APP_PORT:?Set ARG_APP_PORT in .env}"
-    read_only: true
     tmpfs:
       - /tmp:size=128m,mode=1777
       - /run:size=16m,mode=0755
-    cap_drop: [ALL]
-    security_opt: [no-new-privileges:true]
+    read_only: true
+    cap_drop: [ ALL ]
+    security_opt: [ no-new-privileges:true ]
     healthcheck:
-      test: ['CMD', 'python', '-c', 'import urllib.request; urllib.request.urlopen("http://127.0.0.1:8000/health", timeout=5)']
+      test: [ 'CMD', 'python', '-c', 'import urllib.request; urllib.request.urlopen("http://127.0.0.1:8000/health", timeout=5)' ]
       start_period: 60s
       interval: 60s
       timeout: 5s
       retries: 5
+    stop_grace_period: 30s
     depends_on:
+      worker-service:
+        condition: service_healthy
       db-service:
         condition: service_healthy
+      cache-service:
+        condition: service_healthy
     logging:
-      driver: json-file
+      driver: local
       options:
-        max-size: "64m"
+        max-size: "16m"
         max-file: "3"
 
+  ## ------------------------------------------------
   ## 02 - Python worker subprocesses with APScheduler
+  ## ------------------------------------------------
   worker-service:
     restart: unless-stopped
     build:
@@ -137,27 +152,31 @@ services:
     init: true
     networks:
       - isolated-network
-    read_only: true
     tmpfs:
       - /tmp:size=128m,mode=1777
-    cap_drop: [ALL]
-    security_opt: [no-new-privileges:true]
+      - /run:size=8m,mode=0755
+    read_only: true
+    cap_drop: [ ALL ]
+    security_opt: [ no-new-privileges:true ]
     healthcheck:
-      test: ['CMD-SHELL', 'pgrep -f "python worker.py" > /dev/null || exit 1']
+      test: [ 'CMD-SHELL', 'grep -q "worker.py" /proc/*/cmdline' ]
       start_period: 60s
       interval: 60s
       timeout: 5s
       retries: 5
+    stop_grace_period: 30s
     depends_on:
       db-service:
         condition: service_healthy
     logging:
-      driver: json-file
+      driver: local
       options:
-        max-size: "64m"
+        max-size: "16m"
         max-file: "3"
 
-  ## 03 - PostgreSQL relational primary database
+  ## -------------------------------------------
+  ## 03 - PostgreSQL primary relational database
+  ## -------------------------------------------
   db-service:
     restart: unless-stopped
     build:
@@ -173,69 +192,79 @@ services:
       - auth_db_password
       - config_db_password
       - data_db_password
-    init: true
+    ## Note: PostgreSQL needs init daemon to be disabled
+    init: false
     networks:
       - isolated-network
     expose:
       - "${ARG_DB_PORT:?Set ARG_DB_PORT in .env}"
-    read_only: true
+    ## Note: PostgreSQL may need larger shared memory
     shm_size: 1g
     volumes:
       - db-volume:/var/lib/postgresql
     tmpfs:
       - /tmp:size=128m,mode=1777
-      - /var/run/postgresql:size=16m,mode=3775
-    cap_drop: [ALL]
-    cap_add: [CHOWN, SETUID, SETGID, DAC_OVERRIDE, FOWNER]
-    security_opt: [no-new-privileges:true]
+      - /run/postgresql:size=1m,mode=0775
+    read_only: true
+    cap_drop: [ ALL ]
+    ## Note: PostgreSQL needs additional capabilities
+    cap_add: [ CHOWN, SETUID, SETGID, DAC_OVERRIDE, FOWNER ]
+    security_opt: [ no-new-privileges:true ]
     healthcheck:
-      test: ['CMD-SHELL', 'pg_isready -U "$$POSTGRES_USER" -d postgres']
+      test: [ 'CMD-SHELL', 'pg_isready -U "$$POSTGRES_USER" -d postgres' ]
       start_period: 60s
       interval: 60s
       timeout: 5s
       retries: 5
+    ## Note: PostgreSQL may need larger grace period
+    stop_grace_period: 60s
     logging:
-      driver: json-file
+      driver: local
       options:
-        max-size: "64m"
+        max-size: "16m"
         max-file: "3"
 
+  ## --------------------------------------
   ## 04 - Redis distributed in-memory cache
+  ## --------------------------------------
   cache-service:
     restart: unless-stopped
     build:
       context: ./04-mlapi-cache
-      args:
-        ARG_REDIS_PORT: "${ARG_REDIS_PORT:?Set ARG_REDIS_PORT in .env}"
-        ARG_REDIS_PASSWORD_FILE: /run/secrets/redis_password
+    environment:
+      ARG_REDIS_PORT: "${ARG_REDIS_PORT:?Set ARG_REDIS_PORT in .env}"
+      ARG_REDIS_PASSWORD_FILE: /run/secrets/redis_password
     secrets:
       - redis_password
-    init: true
+    ## Note: Redis needs init daemon to be disabled
+    init: false
     networks:
       - isolated-network
     expose:
       - "${ARG_REDIS_PORT:?Set ARG_REDIS_PORT in .env}"
-    read_only: true
-    volumes:
-      - db-volume:/var/lib/postgresql
     tmpfs:
-      - /tmp:size=128m,mode=1777
-    cap_drop: [ALL]
-    cap_add: [CHOWN, SETUID, SETGID, DAC_OVERRIDE, FOWNER]
-    security_opt: [no-new-privileges:true]
+      - /data:size=256m,mode=0700
+      - /usr/local/etc/redis:size=1m,mode=0700
+      - /run/redis:size=1m,mode=0755
+    read_only: true
+    cap_drop: [ ALL ]
+    security_opt: [ no-new-privileges:true ]
     healthcheck:
-      test: ['CMD-SHELL', 'REDISCLI_AUTH="$$(cat /run/secrets/redis_password)" redis-cli ping | grep -q PONG']
+      test: [ 'CMD-SHELL', 'REDISCLI_AUTH="$$(cat /run/secrets/redis_password)" redis-cli ping | grep -q PONG' ]
       start_period: 60s
       interval: 60s
       timeout: 5s
       retries: 5
+    stop_grace_period: 30s
     logging:
-      driver: json-file
+      driver: local
       options:
-        max-size: "64m"
+        max-size: "16m"
         max-file: "3"
 
-  ## Nginx reverse proxy with rate limiting
+  ## ---------------------------------------------------
+  ## 05 - Nginx SSL/TLS reverse proxy with rate limiting
+  ## ---------------------------------------------------
   proxy-service:
     restart: unless-stopped
     build:
@@ -247,34 +276,36 @@ services:
       ARG_APP_PORT: "${ARG_APP_PORT:?Set ARG_APP_PORT in .env}"
       ARG_APP_SERVICE: "app-service"
     init: true
-    ## Port mapping for [INTERNET -> proxy] communication
+    ## Port mapping for [INBOUND -> proxy] communication
     ports:
       - "${ARG_NGINX_HTTP_PORT:-80}:80"
       - "${ARG_NGINX_HTTPS_PORT:-443}:443"
     networks:
       - edge-network
-    read_only: true
     volumes:
       - proxy-volume:/etc/nginx/tls
     tmpfs:
-      - /etc/nginx/conf.d:size=2m,mode=0755
+      - /tmp:size=128m,mode=1777
       - /var/cache/nginx:size=64m,mode=0750
-      - /var/run:size=8m,mode=0755
-      - /tmp:size=64m,mode=1777
-    cap_drop: [ALL]
-    cap_add: [CHOWN, SETUID, SETGID, NET_BIND_SERVICE]
-    security_opt: [no-new-privileges:true]
+      - /etc/nginx/conf.d:size=1m,mode=0700
+      - /run:size=1m,mode=0755
+    read_only: true
+    cap_drop: [ ALL ]
+    ## Note: Nginx needs additional capabilities
+    cap_add: [ CHOWN, SETUID, SETGID, NET_BIND_SERVICE ]
+    security_opt: [ no-new-privileges:true ]
     healthcheck:
-      test: ['CMD', 'nginx', '-t']
+      test: [ 'CMD', 'nginx', '-t' ]
       start_period: 60s
       interval: 60s
       timeout: 5s
       retries: 5
+    stop_grace_period: 30s
     depends_on:
       app-service:
         condition: service_healthy
     logging:
-      driver: json-file
+      driver: local
       options:
-        max-size: "64m"
+        max-size: "16m"
         max-file: "3"
