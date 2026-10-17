@@ -1,6 +1,5 @@
-# MLAPI Template by vitorinojoao
+"""data_postprocessor"""
 
-import logging
 import numpy as np
 
 
@@ -12,7 +11,6 @@ class DataPostprocessor:
 
     def __init__(
         self,
-        logging_level,
         convert_class_scores,
         convert_anomaly_scores,
     ):
@@ -32,16 +30,6 @@ class DataPostprocessor:
                 + " class scores or for anomaly scores, but not both."
             )
 
-        # Logging levels:
-        # 0 - Disabled
-        # 10 - Debug
-        # 20 - Info
-        # 30 - Warning
-        # 40 - Error
-        # 50 - Critical
-        logging_level = int(logging_level)
-        self.logging_level = logging_level if logging_level > 0 else 100
-
     def postprocess(self, y, n_samples):
         """Postprocess the predictions of an ML model."""
 
@@ -56,16 +44,6 @@ class DataPostprocessor:
         # Leave output as scores
         else:
             res = np.array(y, copy=False)
-
-        # Optionally create a log entry
-        if self.logging_level < 11:
-            labels, counts = np.unique(res, return_counts=True)
-            logging.debug(
-                "API: Predicted"
-                + "".join(
-                    f"  |{str(c)} of class '{str(l)}'" for c, l in zip(counts, labels)
-                )
-            )
 
         return res.tolist()
 
@@ -169,6 +147,3 @@ def anomaly_output_fn(y, n_samples, class_labels=None):
             y[i] = class_labels[y[i]]
 
     return y
-
-
-# End of MLAPI Template by vitorinojoao

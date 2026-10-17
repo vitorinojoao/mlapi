@@ -15,4 +15,3 @@ argon2-cffi==25.*
 
 ## Custom dependencies
 numpy==2.*
-requests==2.*

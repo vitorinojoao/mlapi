@@ -1,4 +1,4 @@
-"""run-worker"""
+"""run-workers"""
 
 import os
 import logging
@@ -8,7 +8,7 @@ logging.basicConfig(
     format="%(asctime)s %(levelname)s %(message)s",
 )
 
-## Entrypoint function starts APScheduler worker(s)
-from .src.worker import create_worker
+## Entrypoint function starts worker processes/threads
+from .src.worker import start_workers
 
-create_worker()
+start_workers()
