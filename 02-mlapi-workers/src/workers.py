@@ -11,15 +11,50 @@ from apscheduler.schedulers.background import BackgroundScheduler, BlockingSched
 
 from .db_adapter import secret, connect
 
+from pathlib import Path
+
+
+def secret(name, required=True):
+    path = os.getenv(name + "_FILE")
+    if path:
+        try:
+            value = Path(path).read_text().strip()
+        except OSError:
+            if required:
+                raise
+            return ""
+    else:
+        value = os.getenv(name, "").strip()
+    if required and not value:
+        raise RuntimeError(f"Missing required secret/config: {name}")
+    return value
+
 
 def start_workers():
-    db_adapter = None
-    model_wrapper = None
+    last_in_first_out = True
+
+    model_filepath = None
+    class_names = None
+
+    db_adapter = DBAdapter(
+        db_host,
+        db_port,
+        db_timeout,
+        db_name,
+        db_user,
+        db_password,
+        task_last_in_first_out,
+        task_completed_time_to_live,
+        task_pending_time_to_live,
+    )
+    model_wrapper = ModelWrapper(model_filepath, class_names)
 
     url_list = [
         os.environ["APP_EXTERNAL_URL_1"].rstrip("/"),
         os.environ["APP_EXTERNAL_URL_2"].rstrip("/"),
     ]
+
+    email_list = []
 
     max_threads = 10
     max_tasks_per_thread = 100
@@ -51,9 +86,9 @@ def start_workers():
     )
     logging.warning("process_scheduler created")
 
-    ## -----------------------------------
+    ## ----------------------------------------
 
-    ## High-frequency lightweight tasks in coalescing threads
+    ## Lightweight tasks in coalescing threads
     thread_scheduler.add_job(
         task_high_frequency,
         id="task_high_frequency",
@@ -65,7 +100,7 @@ def start_workers():
     )
     logging.warning("task_high_frequency added to thread_scheduler")
 
-    ## Lower-frequency heavyweight tasks in coalescing processes
+    ## Heavyweight tasks in coalescing processes
     process_scheduler.add_job(
         task_low_frequency,
         id="task_low_frequency",
@@ -79,18 +114,30 @@ def start_workers():
 
     ## Scheduled tasks in cron-based processes with grace time
     process_scheduler.add_job(
-        task_daily,
+        task_daily_email,
         id="task_daily",
         coalesce=True,
         trigger="cron",
         hour=0,
         minute=1,
         misfire_grace_time=3600,
+        args=[db_adapter, email_list],
+    )
+    logging.warning("task_daily_email added to process_scheduler")
+
+    process_scheduler.add_job(
+        task_daily_url,
+        id="task_daily",
+        coalesce=True,
+        trigger="cron",
+        hour=0,
+        minute=5,
+        misfire_grace_time=3600,
         args=[db_adapter, url_list],
     )
-    logging.warning("task_daily added to process_scheduler")
+    logging.warning("task_daily_url added to process_scheduler")
 
-    ## -----------------------------------
+    ## ----------------------------------------
 
     ## Start the background scheduler
     logging.warning("process_scheduler started")
@@ -112,118 +159,62 @@ def start_workers():
         thread_scheduler.shutdown(wait=True)
         process_scheduler.shutdown(wait=False)
 
-    ## -----------------------------------
-
-
-def creds(prefix):
-    return secret(prefix + "_DB_USER"), secret(prefix + "_DB_PASSWORD")
-
-
-def cfg():
-    u, p = creds("CONFIG")
-    return connect("config", u, p)
-
-
-def data():
-    u, p = creds("DATA")
-    return connect("data", u, p)
-
-
-def get_config():
-    with cfg() as c, c.cursor() as cur:
-        cur.execute("SELECT * FROM system_config ORDER BY config_id DESC LIMIT 1")
-        return cur.fetchone()
+    ## ----------------------------------------
 
 
 def task_high_frequency(db_adapter, model_wrapper):
-    # Claim task
-    # Select data samples
-    # Do task
-    # Insert data results
-    # Complete task
-    # Log it
-
-    conf = get_config()
-    order = conf["task_order"]
-
-    task = None
-    # Claim tasks with SKIP LOCKED so that multiple workers don't process the same task
-    with cfg() as c, c.cursor() as cur:
-        cur.execute(
-            "SELECT p.task_id,p.user_id,p.created_at FROM pending_tasks p JOIN submission_outbox o USING(task_id) WHERE p.status='pending' AND o.state='complete' ORDER BY p.created_at "
-            + ("ASC" if order == "oldest" else "DESC")
-            + " FOR UPDATE OF p SKIP LOCKED LIMIT 1"
-        )
-        task = cur.fetchone()
-        if not task:
-            return False
-        cur.execute(
-            "UPDATE pending_tasks SET status='processing' WHERE task_id=%s",
-            (task["task_id"],),
-        )
     try:
-        with data() as c, c.cursor() as cur:
-            cur.execute(
-                "SELECT td.data_id, s.samples FROM task_data td JOIN samples s USING(data_id) WHERE td.task_id=%s",
-                (task["task_id"],),
-            )
-            source = cur.fetchone()
+        ## Claim task and select data samples
+        task, source = db_adapter.db_claim_task()
+
         if not source:
             raise RuntimeError("sample_missing")
+
+        ## ----------------------------------------
+
+        ## Do task
+
         # Replace this deterministic example transform with the actual workload
         samples = source["samples"]
         if isinstance(samples, list):
             result = {"sample_count": len(samples), "items": samples}
         else:
             result = {"sample_count": len(samples), "keys": sorted(samples.keys())}
-        result_id = uuid.uuid4()
-        with data() as c, c.cursor() as cur:
-            cur.execute(
-                "INSERT INTO results(results_id,result) VALUES (%s,%s)",
-                (result_id, Jsonb(result)),
-            )
-            cur.execute(
-                "UPDATE task_data SET results_id=%s WHERE task_id=%s",
-                (result_id, task["task_id"]),
-            )
-        with cfg() as c, c.cursor() as cur:
-            cur.execute(
-                "INSERT INTO completed_tasks(task_id,user_id,created_at,completed_at,status) VALUES (%s,%s,%s,now(),'completed') ON CONFLICT(task_id) DO NOTHING",
-                (task["task_id"], task["user_id"], task["created_at"]),
-            )
-            cur.execute(
-                "DELETE FROM pending_tasks WHERE task_id=%s", (task["task_id"],)
-            )
-            cur.execute(
-                "UPDATE submission_outbox SET state='processed' WHERE task_id=%s",
-                (task["task_id"],),
-            )
-        log.info("completed task_id=%s", task["task_id"])
+
+        ## ----------------------------------------
+
+        ## Complete task and insert results
+
+        db_adapter.db_task_completed(task["task_id"], result)
+
         return True
+
+    ## ----------------------------------------
+
+    ## Deal with exception
 
     except Exception:
         try:
-            with cfg() as c, c.cursor() as cur:
-                cur.execute(
-                    "UPDATE pending_tasks SET status='failed',error_code=%s WHERE task_id=%s",
-                    ("processing_error", task["task_id"]),
-                )
-            log.exception("task failed task_id=%s", task["task_id"])
+            db_adapter.db_task_failed(task["task_id"])
+
+            logging.exception("failed task_id=%s", task["task_id"])
 
         except Exception:
-            log.exception("db failed task_id=%s", task["task_id"])
+            logging.exception("db failed in task_id=%s", task["task_id"])
 
         return False
 
 
 def task_low_frequency(db_adapter):
-    # Select old tasks
-    # Delete respective data
-    # Log it
 
     conf = get_config()
 
+    ## ----------------------------------------
+
+    ## Select old tasks
+
     # Metadata remains in config; only samples/results/link rows are removed from data
+
     with cfg() as c, c.cursor() as cur:
         if conf["pending_ttl_seconds"]:
             cur.execute(
@@ -241,6 +232,11 @@ def task_low_frequency(db_adapter):
             old_done = [r["task_id"] for r in cur.fetchall()]
         else:
             old_done = []
+
+    ## ----------------------------------------
+
+    ## Delete respective data
+
     for tid in old_pending + old_done:
         with data() as c, c.cursor() as cur:
             cur.execute(
@@ -260,21 +256,32 @@ def task_low_frequency(db_adapter):
                 "UPDATE pending_tasks SET status='failed',error_code='expired' WHERE task_id=%s",
                 (tid,),
             )
+
+    ## ----------------------------------------
+
+    ## Log it
+
     if old_pending or old_done:
-        log.info(
+        logging.info(
             "cleanup removed payload for %d tasks", len(old_pending) + len(old_done)
         )
 
 
-def task_daily(db_adapter, url_list):
+def task_daily_email(db_adapter, email_list):
+    # Count new tasks
+    # Send email
+    logging.info("task_daily_email - completed")
+
+
+def task_daily_url(db_adapter, url_list):
     http = requests.Session()
     http.trust_env = False
     http.mount("https://", HTTPAdapter(max_retries=5))
 
     response = http.get(
-        APP_EXTERNAL_URL_1 + "/status",
+        url_list + "/status",
         timeout=(3, 10),
         allow_redirects=False,
     )
     response.raise_for_status()
-    return response.json()
+    logging.info("task_daily_url - completed")

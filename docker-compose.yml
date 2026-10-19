@@ -7,7 +7,7 @@ name: mlapi
 ## Note: INBOUND communication only allowed in 'proxy-service' via port mapping
 
 networks:
-  ## Edge network for [proxy -> app], [app -> OUTBOUND] communication
+  ## Edge network for [proxy -> app], [worker -> OUTBOUND] communication
   edge-network:
     driver: bridge
   ## Isolated network for [app -> worker], [app -> cache], [app -> db], [worker -> db] communication
@@ -116,7 +116,7 @@ services:
       retries: 5
     stop_grace_period: 30s
     depends_on:
-      worker-service:
+      workers-service:
         condition: service_healthy
       db-service:
         condition: service_healthy
@@ -128,13 +128,13 @@ services:
         max-size: "16m"
         max-file: "3"
 
-  ## ------------------------------------------------
-  ## 02 - Python worker subprocesses with APScheduler
-  ## ------------------------------------------------
-  worker-service:
+  ## -----------------------------------------------------
+  ## 02 - Python worker processes/threads with APScheduler
+  ## -----------------------------------------------------
+  workers-service:
     restart: unless-stopped
     build:
-      context: ./02-mlapi-worker
+      context: ./02-mlapi-workers
     environment:
       DB_HOST: db
       CONFIG_DB_USER: config_app
@@ -151,6 +151,7 @@ services:
       - data_db_password
     init: true
     networks:
+      - edge-network
       - isolated-network
     tmpfs:
       - /tmp:size=128m,mode=1777
@@ -159,7 +160,7 @@ services:
     cap_drop: [ ALL ]
     security_opt: [ no-new-privileges:true ]
     healthcheck:
-      test: [ 'CMD-SHELL', 'grep -q "worker.py" /proc/*/cmdline' ]
+      test: [ 'CMD-SHELL', 'grep -q "run-workers.py" /proc/*/cmdline' ]
       start_period: 60s
       interval: 60s
       timeout: 5s
