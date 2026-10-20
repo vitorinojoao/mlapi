@@ -6,22 +6,22 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     PIP_NO_CACHE_DIR=1 \
     PIP_DISABLE_PIP_VERSION_CHECK=1
 
-## Create unprivileged user 'worker'
-RUN groupadd --system --gid 10002 worker \
-    && useradd --system --uid 10002 --gid worker --home-dir /nonexistent --no-create-home worker
+## Create unprivileged user 'workers'
+RUN groupadd --system --gid 10002 workers \
+    && useradd --system --uid 10002 --gid workers --home-dir /nonexistent --no-create-home workers
 
 ## Copy necessary files and change owner
-WORKDIR /worker
+WORKDIR /workers
 
 COPY --chown=10002:10002 requirements.txt ./requirements.txt
-COPY --chown=10002:10002 run-worker.py ./run-worker.py
-COPY --chown=10002:10002 source ./source
+COPY --chown=10002:10002 run-workers.py ./run-workers.py
+COPY --chown=10002:10002 src ./src
 COPY --chown=10002:10002 resources ./resources
 
 ## Install package dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
-## Execute worker command as unprivileged user
+## Execute 'run-workers' as unprivileged user
 USER 10002:10002
 
-CMD ["python", "run-worker.py"]
+CMD ["python", "run-workers.py"]

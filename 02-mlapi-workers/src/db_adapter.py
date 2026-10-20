@@ -16,6 +16,7 @@ class DBAdapter:
         db_user,
         db_password,
         tasks_order_last_in_first_out=None,
+        tasks_summary_hours=None,
         tasks_pending_time_to_live=None,
         tasks_done_time_to_live=None,
         input_data_time_to_live=None,
@@ -44,8 +45,25 @@ class DBAdapter:
 
         except Exception as e:
             raise ValueError(
-                "The DB tasks order must be True for LIFO or False for FIFO"
+                "The DB tasks order must use True for LIFO or False for FIFO"
             ) from e
+
+        ## ----------------------------------------
+
+        if tasks_summary_hours:
+            try:
+                self.tasks_summary_hours = int(tasks_summary_hours)
+
+            except Exception as e:
+                raise ValueError(
+                    "The DB tasks summary must use an integer number of hours"
+                ) from e
+
+            if self.tasks_summary_hours < 1:
+                raise ValueError("The DB tasks summary must use at least 1 hour")
+
+        else:
+            self.tasks_summary_hours = 24
 
         ## ----------------------------------------
 
@@ -341,15 +359,7 @@ class DBAdapter:
 
     ## ----------------------------------------
 
-    def summary_pending_done_tasks(self, summary_hours):
-        try:
-            summary_hours = int(summary_hours)
-
-        except Exception as e:
-            raise ValueError(
-                "The DB currently requires summary hours to be an integer number"
-            ) from e
-
+    def summary_pending_done_tasks(self):
         with psycopg.connect(**self.connect_kwargs) as c, c.cursor() as cur:
             cur.execute(
                 """
@@ -375,7 +385,7 @@ class DBAdapter:
                 FROM count_success, count_error, count_pending;
                 ;
                 """,
-                (summary_hours, summary_hours),
+                (self.tasks_summary_hours, self.tasks_summary_hours),
             )
 
             return cur.fetchone()

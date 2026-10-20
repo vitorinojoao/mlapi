@@ -2,23 +2,23 @@
 set -eu
 umask 077
 
-: "${ARG_REDIS_PORT:?ARG_REDIS_PORT is required}"
-: "${ARG_REDIS_PASSWORD_FILE:?ARG_REDIS_PASSWORD_FILE is required}"
+: "${CACHE_PORT:?CACHE_PORT is required}"
+: "${CACHE_PASSWORD_FILE:?CACHE_PASSWORD_FILE is required}"
 
-if [ ! -r "${ARG_REDIS_PASSWORD_FILE}" ]; then
-    echo "Redis password secret is missing or unreadable" >&2
+if [ ! -r "${CACHE_PASSWORD_FILE}" ]; then
+    echo "Redis cache password secret is missing or unreadable" >&2
     exit 1
 fi
 
-ARG_REDIS_PASSWORD="$(cat "${ARG_REDIS_PASSWORD_FILE}" | tr -d '\r\n')"
+cache_password="$(cat "${CACHE_PASSWORD_FILE}" | tr -d '\r\n')"
 
-if [ -z "$ARG_REDIS_PASSWORD" ] || printf '%s' "$ARG_REDIS_PASSWORD" | grep -q '[[:space:]]'; then
-    echo "Redis password must be non-empty and contain no whitespace" >&2
+if [ -z "$cache_password" ] || printf '%s' "$cache_password" | grep -q '[[:space:]]'; then
+    echo "Redis cache password must be non-empty and contain no whitespace" >&2
     exit 1
 fi
 
-ARG_REDIS_PASSWORD="$ARG_REDIS_PASSWORD" \
-envsubst '${ARG_REDIS_PORT},${ARG_REDIS_PASSWORD}' \
+cache_password="$cache_password" \
+envsubst '${CACHE_PORT},${cache_password}' \
   < /usr/local/etc/redis-templates/redis.conf.template \
   > /usr/local/etc/redis/redis.conf
 

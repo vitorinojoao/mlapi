@@ -9,6 +9,6 @@ logging.basicConfig(
 )
 
 ## Entrypoint variable 'app' is used by Gunicorn WSGI in 'run-app:app'
-from .src.app import create_app
+from src.app import create_app
 
 app = create_app()

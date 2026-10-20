@@ -75,7 +75,15 @@ docker compose ps
 
 5: Inspect logs
 
-docker compose logs --tail=100 app-service db-service nginx-service
+docker compose logs --tail=100 app-service worker-service db-service cache-service proxy-service
+
+Stop every service:
+
+docker compose down
+
+Delete everything:
+
+docker system prune -a --volumes
 
 ## Local DNS Configuration
 

@@ -14,7 +14,7 @@ class ModelWrapper:
 
         except Exception as e:
             raise OSError(
-                "The Wrapper could not load a model from the provided filepath"
+                f"The Wrapper could not load a model from a file at {model_filepath}"
             ) from e
 
         ## ----------------------------------------

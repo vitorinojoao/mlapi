@@ -1,6 +1,6 @@
 FROM python:3.12-slim
 
-## Define Gunicorn build arguments
+## Require build arguments
 ARG ARG_APP_PORT \
     ARG_APP_WORKERS \
     ARG_APP_TIMEOUT \
@@ -31,7 +31,7 @@ COPY --chown=10001:10001 resources ./resources
 ## Install package dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
-## Execute Gunicorn command as unprivileged user
+## Execute Gunicorn command for 'run-app' as unprivileged user
 USER 10001:10001
 
 CMD ["sh", "-c", "exec gunicorn \

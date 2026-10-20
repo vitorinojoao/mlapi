@@ -14,12 +14,13 @@ appendonly no
 maxmemory 128mb
 maxmemory-policy noeviction
 
-## Execution and logging 
+## Execution and logging
 daemonize no
 supervised no
 loglevel warning
 
 ## Note: Dangerous commands are disabled
+## because they are not currently needed
 rename-command FLUSHDB ""
 rename-command FLUSHALL ""
 rename-command CONFIG ""

@@ -9,6 +9,6 @@ logging.basicConfig(
 )
 
 ## Entrypoint function starts worker processes/threads
-from .src.worker import start_workers
+from src.workers import start_workers
 
 start_workers()

@@ -25,16 +25,12 @@ volumes:
 
 secrets:
   ## Secret files for sensitive variables
-  postgres_admin_password:
-    file: ./docker-secrets/postgres_admin_password
-  auth_db_password:
-    file: ./docker-secrets/auth_db_password
-  config_db_password:
-    file: ./docker-secrets/config_db_password
-  data_db_password:
-    file: ./docker-secrets/data_db_password
-  redis_password:
-    file: ./docker-secrets/redis_password
+  db_auth_password:
+    file: ./docker-secrets/db_auth_password
+  db_data_password:
+    file: ./docker-secrets/db_data_password
+  cache_password:
+    file: ./docker-secrets/cache_password
 
 services:
   ## ----------------------------------------
@@ -45,24 +41,20 @@ services:
     build:
       context: ./01-mlapi-app
       args:
-        ARG_APP_PORT: "${ARG_APP_PORT:?Set ARG_APP_PORT in .env}"
+        APP_PORT: "${APP_PORT:?Set APP_PORT in .env}"
         ARG_APP_WORKERS: "${ARG_APP_WORKERS:-3}"
         ARG_APP_TIMEOUT: "${ARG_APP_TIMEOUT:-30}"
         ARG_APP_GRACEFUL: "${ARG_APP_GRACEFUL:-10}"
     environment:
-      ARG_DB_PORT: "${ARG_DB_PORT:?Set ARG_DB_PORT in .env}"
-      ARG_DB_HOST: "${ARG_DB_HOST:-db}"
-      APP_EXTERNAL_URL_1: "${APP_EXTERNAL_URL_1:?Set APP_EXTERNAL_URL_1 in .env}"
-      APP_EXTERNAL_URL_2: "${APP_EXTERNAL_URL_2:?Set APP_EXTERNAL_URL_2 in .env}"
-      AUTH_DB_NAME: auth
-      AUTH_DB_USER: auth_app
-      AUTH_DB_PASSWORD_FILE: /run/secrets/auth_db_password
-      CONFIG_DB_NAME: config
-      CONFIG_DB_USER: config_app
-      CONFIG_DB_PASSWORD_FILE: /run/secrets/config_db_password
-      DATA_DB_NAME: data
-      DATA_DB_USER: data_app
-      DATA_DB_PASSWORD_FILE: /run/secrets/data_db_password
+      DB_HOST: db-service
+      DB_PORT: "${DB_PORT:?Set DB_PORT in .env}"
+      DB_TIMEOUT: 5
+      DB_AUTH_NAME: "${DB_AUTH_NAME:?Set DB_AUTH_NAME in .env}"
+      DB_AUTH_USER: "${DB_AUTH_USER:?Set DB_AUTH_USER in .env}"
+      DB_AUTH_PASSWORD_FILE: /run/secrets/db_auth_password
+      DB_DATA_NAME: "${DB_DATA_NAME:?Set DB_DATA_NAME in .env}"
+      DB_DATA_USER: "${DB_DATA_USER:?Set DB_DATA_USER in .env}"
+      DB_DATA_PASSWORD_FILE: /run/secrets/db_data_password
       API_CATEGORICAL_ENCODING_FILEPATH: "${API_CATEGORICAL_ENCODING_FILEPATH:?Set API_CATEGORICAL_ENCODING_FILEPATH in .env}"
       TRUSTED_HOSTS: ${DOMAIN:-api.home.arpa},${IP_ADDRESS:-127.0.0.1},localhost,127.0.0.1
       FLASK_SECRET_KEY_FILE: /run/secrets/flask_secret_key
@@ -77,7 +69,7 @@ services:
       AUTH_FAILURE_LOCKOUT_SECONDS: ${AUTH_FAILURE_LOCKOUT_SECONDS:-900}
       MAX_REQUEST_BYTES: ${MAX_REQUEST_BYTES:-2000000}
       REDIS_HOST: redis
-      REDIS_PASSWORD_FILE: /run/secrets/redis_password
+      REDIS_PASSWORD_FILE: /run/secrets/cache_password
       RATE_LIMIT_ENABLED: ${RATE_LIMIT_ENABLED:-true}
       RATE_LIMIT_STRATEGY: ${RATE_LIMIT_STRATEGY:-moving-window}
       RATE_LIMIT_DEFAULT: ${RATE_LIMIT_DEFAULT:-120 per minute}
@@ -93,15 +85,14 @@ services:
       RATE_LIMIT_HEADERS_ENABLED: ${RATE_LIMIT_HEADERS_ENABLED:-false}
       RATE_LIMIT_KEY_PREFIX: ${RATE_LIMIT_KEY_PREFIX:-secure-task-api}
     secrets:
-      - auth_db_password
-      - config_db_password
-      - data_db_password
+      - db_auth_password
+      - db_data_password
     init: true
     networks:
       - edge-network
       - isolated-network
     expose:
-      - "${ARG_APP_PORT:?Set ARG_APP_PORT in .env}"
+      - "${APP_PORT:?Set APP_PORT in .env}"
     tmpfs:
       - /tmp:size=128m,mode=1777
       - /run:size=16m,mode=0755
@@ -111,6 +102,7 @@ services:
     healthcheck:
       test: [ 'CMD', 'python', '-c', 'import urllib.request; urllib.request.urlopen("http://127.0.0.1:8000/health", timeout=5)' ]
       start_period: 60s
+      start_interval: 5s
       interval: 60s
       timeout: 5s
       retries: 5
@@ -136,19 +128,27 @@ services:
     build:
       context: ./02-mlapi-workers
     environment:
-      DB_HOST: db
-      CONFIG_DB_USER: config_app
-      CONFIG_DB_PASSWORD_FILE: /run/secrets/config_db_password
-      DATA_DB_USER: data_app
-      DATA_DB_PASSWORD_FILE: /run/secrets/data_db_password
-      WORKER_COUNT: ${WORKER_COUNT:-2}
-      WORKER_SLEEP: ${WORKER_SLEEP:-2}
-      API_MODEL_FILEPATH: "${API_MODEL_FILEPATH:?Set API_MODEL_FILEPATH in .env}"
-      API_CONVERT_CLASS_SCORES: "${API_CONVERT_CLASS_SCORES:?Set API_CONVERT_CLASS_SCORES in .env}"
-      API_CONVERT_ANOMALY_SCORES: "${API_CONVERT_ANOMALY_SCORES:?Set API_CONVERT_ANOMALY_SCORES in .env}"
+      DB_HOST: db-service
+      DB_PORT: "${DB_PORT:?Set DB_PORT in .env}"
+      DB_TIMEOUT: 5
+      DB_DATA_NAME: "${DB_DATA_NAME:?Set DB_DATA_NAME in .env}"
+      DB_DATA_USER: "${DB_DATA_USER:?Set DB_DATA_USER in .env}"
+      DB_DATA_PASSWORD_FILE: /run/secrets/db_data_password
+      WRKR_SCHEDULER_MAX_THREADS: 10
+      WRKR_SCHEDULER_MAX_PROCESSES: 3
+      WRKR_SCHEDULER_RESPAWN_PROCESSES: 100
+      WRKR_TASKS_ORDER_LAST_IN_FIRST_OUT: true
+      WRKR_TASKS_SUMMARY_HOURS: 24
+      WRKR_TASKS_PENDING_TIME_TO_LIVE: 3600
+      WRKR_TASKS_DONE_TIME_TO_LIVE: 172800
+      WRKR_INPUT_DATA_TIME_TO_LIVE: 1
+      WRKR_OUTPUT_RESULTS_TIME_TO_LIVE: 3600
+      WRKR_MODEL_FILE: ./resources/slow_ml_model.joblib
+      WRKR_MODEL_CLASS_NAMES_LIST: "[]"
+      WRKR_SEND_EMAIL_LIST: "[ admin@example.com ]"
+      WRKR_FETCH_URL_LIST: "[ https://example.com , http://192.0.2.1 ]"
     secrets:
-      - config_db_password
-      - data_db_password
+      - db_data_password
     init: true
     networks:
       - edge-network
@@ -162,6 +162,7 @@ services:
     healthcheck:
       test: [ 'CMD-SHELL', 'grep -q "run-workers.py" /proc/*/cmdline' ]
       start_period: 60s
+      start_interval: 5s
       interval: 60s
       timeout: 5s
       retries: 5
@@ -182,23 +183,24 @@ services:
     restart: unless-stopped
     build:
       context: ./03-mlapi-db
+      args:
+        DB_PORT: "${DB_PORT:?Set DB_PORT in .env}"
     environment:
-      PGPORT: "${ARG_DB_PORT:?Set ARG_DB_PORT in .env}"
-      POSTGRES_DB: postgres
-      POSTGRES_USER: postgres_admin
-      POSTGRES_PASSWORD_FILE: /run/secrets/postgres_admin_password
-      POSTGRES_INITDB_ARGS: "--auth-host=scram-sha-256 --auth-local=scram-sha-256"
+      DB_AUTH_NAME: "${DB_AUTH_NAME:?Set DB_AUTH_NAME in .env}"
+      DB_AUTH_USER: "${DB_AUTH_USER:?Set DB_AUTH_USER in .env}"
+      DB_AUTH_PASSWORD_FILE: /run/secrets/db_auth_password
+      DB_DATA_NAME: "${DB_DATA_NAME:?Set DB_DATA_NAME in .env}"
+      DB_DATA_USER: "${DB_DATA_USER:?Set DB_DATA_USER in .env}"
+      DB_DATA_PASSWORD_FILE: /run/secrets/db_data_password
     secrets:
-      - postgres_admin_password
-      - auth_db_password
-      - config_db_password
-      - data_db_password
+      - db_auth_password
+      - db_data_password
     ## Note: PostgreSQL needs init daemon to be disabled
     init: false
     networks:
       - isolated-network
     expose:
-      - "${ARG_DB_PORT:?Set ARG_DB_PORT in .env}"
+      - "${DB_PORT:?Set DB_PORT in .env}"
     ## Note: PostgreSQL may need larger shared memory
     shm_size: 1g
     volumes:
@@ -212,8 +214,9 @@ services:
     cap_add: [ CHOWN, SETUID, SETGID, DAC_OVERRIDE, FOWNER ]
     security_opt: [ no-new-privileges:true ]
     healthcheck:
-      test: [ 'CMD-SHELL', 'pg_isready -U "$$POSTGRES_USER" -d postgres' ]
+      test: [ 'CMD-SHELL', 'pg_isready -U postgres -d postgres' ]
       start_period: 60s
+      start_interval: 5s
       interval: 60s
       timeout: 5s
       retries: 5
@@ -233,16 +236,16 @@ services:
     build:
       context: ./04-mlapi-cache
     environment:
-      ARG_REDIS_PORT: "${ARG_REDIS_PORT:?Set ARG_REDIS_PORT in .env}"
-      ARG_REDIS_PASSWORD_FILE: /run/secrets/redis_password
+      CACHE_PORT: "${CACHE_PORT:?Set CACHE_PORT in .env}"
+      CACHE_PASSWORD_FILE: /run/secrets/cache_password
     secrets:
-      - redis_password
+      - cache_password
     ## Note: Redis needs init daemon to be disabled
     init: false
     networks:
       - isolated-network
     expose:
-      - "${ARG_REDIS_PORT:?Set ARG_REDIS_PORT in .env}"
+      - "${CACHE_PORT:?Set CACHE_PORT in .env}"
     tmpfs:
       - /data:size=256m,mode=0700
       - /usr/local/etc/redis:size=1m,mode=0700
@@ -251,8 +254,9 @@ services:
     cap_drop: [ ALL ]
     security_opt: [ no-new-privileges:true ]
     healthcheck:
-      test: [ 'CMD-SHELL', 'REDISCLI_AUTH="$$(cat /run/secrets/redis_password)" redis-cli ping | grep -q PONG' ]
+      test: [ 'CMD-SHELL', 'REDISCLI_AUTH="$$(cat /run/secrets/cache_password)" redis-cli ping | grep -q PONG' ]
       start_period: 60s
+      start_interval: 5s
       interval: 60s
       timeout: 5s
       retries: 5
@@ -274,7 +278,7 @@ services:
       ARG_NGINX_DOMAIN: "${ARG_NGINX_DOMAIN:?Set ARG_NGINX_DOMAIN in .env}"
       ARG_NGINX_IP: "${ARG_NGINX_IP:?Set ARG_NGINX_IP in .env}"
       ARG_NGINX_BODY_SIZE: "10m"
-      ARG_APP_PORT: "${ARG_APP_PORT:?Set ARG_APP_PORT in .env}"
+      APP_PORT: "${APP_PORT:?Set APP_PORT in .env}"
       ARG_APP_SERVICE: "app-service"
     init: true
     ## Port mapping for [INBOUND -> proxy] communication
@@ -298,6 +302,7 @@ services:
     healthcheck:
       test: [ 'CMD', 'nginx', '-t' ]
       start_period: 60s
+      start_interval: 5s
       interval: 60s
       timeout: 5s
       retries: 5

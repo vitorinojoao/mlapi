@@ -9,7 +9,8 @@ RUN chmod 0755 /usr/local/bin/nginx-entrypoint.sh \
     && mkdir -p /etc/nginx/tls \
     && apk add --no-cache openssl
 
-## Use custom entrypoint script for startup certificate rotation
+## Use custom script to fill template with environmental variables
+## and ensure startup certificate rotation
 ENTRYPOINT ["/usr/local/bin/nginx-entrypoint.sh"]
 
 ## Execute the official CMD command

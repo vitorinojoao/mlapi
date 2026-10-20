@@ -1,8 +1,13 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
+umask 077
 
-psql --username "$POSTGRES_USER" --dbname data_db \
-  --set ON_ERROR_STOP=1 <<'SQL'
+## PSQL command to create DB_DATA_NAME schema
+## Note: using postgres superuser only during initialization
+psql --dbname "$DB_DATA_NAME" \
+    --username postgres \
+    --set ON_ERROR_STOP=1 \
+    <<'EOSQL'
 
 CREATE TABLE IF NOT EXISTS tasks_pending (
     task_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -33,4 +38,4 @@ CREATE TABLE IF NOT EXISTS output_results (
 CREATE INDEX IF NOT EXISTS idx_tasks_pending_lifo ON tasks_pending (created_at DESC, task_id);
 CREATE INDEX IF NOT EXISTS idx_tasks_pending_fifo ON tasks_pending (created_at ASC, task_id);
 
-SQL
+EOSQL
