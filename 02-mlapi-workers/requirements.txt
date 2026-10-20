@@ -7,6 +7,5 @@ psycopg[binary]==3.*
 apscheduler==3.*
 
 ## Custom dependencies
-requests==2.*
 joblib==1.*
 numpy==2.*

@@ -14,4 +14,5 @@ flask-limiter[redis]==4.*
 argon2-cffi==25.*
 
 ## Custom dependencies
+joblib==1.*
 numpy==2.*

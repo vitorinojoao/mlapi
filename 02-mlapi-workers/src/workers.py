@@ -2,16 +2,13 @@
 
 import os
 import logging
-import uuid
-import requests
-from requests.adapters import HTTPAdapter
+from pathlib import Path
 
-from psycopg.types.json import Jsonb
+import numpy as np
 from apscheduler.schedulers.background import BackgroundScheduler, BlockingScheduler
 
-from .db_adapter import secret, connect
-
-from pathlib import Path
+from .db_adapter import DBAdapter
+from .model_wrapper import ModelWrapper
 
 
 def secret(name, required=True):
@@ -31,7 +28,12 @@ def secret(name, required=True):
 
 
 def start_workers():
-    last_in_first_out = True
+
+    task_last_in_first_out = True
+    task_pending_time_to_live = 3600
+    task_done_time_to_live = 172800
+    input_data_time_to_live = 1
+    output_results_time_to_live = 3600
 
     model_filepath = None
     class_names = None
@@ -44,8 +46,10 @@ def start_workers():
         db_user,
         db_password,
         task_last_in_first_out,
-        task_completed_time_to_live,
         task_pending_time_to_live,
+        task_done_time_to_live,
+        input_data_time_to_live,
+        output_results_time_to_live,
     )
     model_wrapper = ModelWrapper(model_filepath, class_names)
 
@@ -59,7 +63,7 @@ def start_workers():
     max_threads = 10
     max_tasks_per_thread = 100
 
-    max_processes = 1
+    max_processes = 2
     max_tasks_per_process = 100
 
     ## Create the main scheduler for worker threads
@@ -90,32 +94,32 @@ def start_workers():
 
     ## Lightweight tasks in coalescing threads
     thread_scheduler.add_job(
-        task_high_frequency,
-        id="task_high_frequency",
+        task_high_frequency_prediction,
+        id="task_high_frequency_prediction",
         coalesce=True,
         trigger="interval",
         seconds=5,
         max_instances=1,
         args=[db_adapter, model_wrapper],
     )
-    logging.warning("task_high_frequency added to thread_scheduler")
+    logging.warning("task_high_frequency_prediction added to thread_scheduler")
 
     ## Heavyweight tasks in coalescing processes
     process_scheduler.add_job(
-        task_low_frequency,
-        id="task_low_frequency",
+        task_low_frequency_cleanup,
+        id="task_low_frequency_cleanup",
         coalesce=True,
         trigger="interval",
         seconds=60,
         max_instances=1,
         args=[db_adapter],
     )
-    logging.warning("task_low_frequency added to process_scheduler")
+    logging.warning("task_low_frequency_cleanup  added to process_scheduler")
 
     ## Scheduled tasks in cron-based processes with grace time
     process_scheduler.add_job(
-        task_daily_email,
-        id="task_daily",
+        task_daily_summary_email,
+        id="task_daily_summary_email",
         coalesce=True,
         trigger="cron",
         hour=0,
@@ -123,11 +127,11 @@ def start_workers():
         misfire_grace_time=3600,
         args=[db_adapter, email_list],
     )
-    logging.warning("task_daily_email added to process_scheduler")
+    logging.warning("task_daily_summary_email added to process_scheduler")
 
     process_scheduler.add_job(
-        task_daily_url,
-        id="task_daily",
+        task_daily_fetch_url,
+        id="task_daily_fetch_url",
         coalesce=True,
         trigger="cron",
         hour=0,
@@ -135,7 +139,7 @@ def start_workers():
         misfire_grace_time=3600,
         args=[db_adapter, url_list],
     )
-    logging.warning("task_daily_url added to process_scheduler")
+    logging.warning("task_daily_fetch_url added to process_scheduler")
 
     ## ----------------------------------------
 
@@ -159,121 +163,89 @@ def start_workers():
         thread_scheduler.shutdown(wait=True)
         process_scheduler.shutdown(wait=False)
 
-    ## ----------------------------------------
+
+## ----------------------------------------
 
 
-def task_high_frequency(db_adapter, model_wrapper):
+def task_high_frequency_prediction(db_adapter, model_wrapper):
     try:
-        ## Claim task and select data samples
-        task, source = db_adapter.db_claim_task()
+        claimed = db_adapter.claim_pending_task()
 
-        if not source:
-            raise RuntimeError("sample_missing")
+        if claimed:
+            task_id, user_id, created_at, input_data = claimed
+        else:
+            return
+
+        if input_data:
+            input_data = np.array(input_data)
+
+            n_samples = input_data.shape[0]
+        else:
+            raise ValueError("No input data")
 
         ## ----------------------------------------
 
-        ## Do task
+        output_results = model_wrapper.predict(input_data)
 
-        # Replace this deterministic example transform with the actual workload
-        samples = source["samples"]
-        if isinstance(samples, list):
-            result = {"sample_count": len(samples), "items": samples}
-        else:
-            result = {"sample_count": len(samples), "keys": sorted(samples.keys())}
-
-        ## ----------------------------------------
-
-        ## Complete task and insert results
-
-        db_adapter.db_task_completed(task["task_id"], result)
-
-        return True
-
-    ## ----------------------------------------
-
-    ## Deal with exception
-
-    except Exception:
-        try:
-            db_adapter.db_task_failed(task["task_id"])
-
-            logging.exception("failed task_id=%s", task["task_id"])
-
-        except Exception:
-            logging.exception("db failed in task_id=%s", task["task_id"])
-
-        return False
-
-
-def task_low_frequency(db_adapter):
-
-    conf = get_config()
-
-    ## ----------------------------------------
-
-    ## Select old tasks
-
-    # Metadata remains in config; only samples/results/link rows are removed from data
-
-    with cfg() as c, c.cursor() as cur:
-        if conf["pending_ttl_seconds"]:
-            cur.execute(
-                "SELECT task_id FROM pending_tasks WHERE created_at < now() - (%s * interval '1 second')",
-                (conf["pending_ttl_seconds"],),
-            )
-            old_pending = [r["task_id"] for r in cur.fetchall()]
-        else:
-            old_pending = []
-        if conf["completed_ttl_seconds"]:
-            cur.execute(
-                "SELECT task_id FROM completed_tasks WHERE completed_at < now() - (%s * interval '1 second')",
-                (conf["completed_ttl_seconds"],),
-            )
-            old_done = [r["task_id"] for r in cur.fetchall()]
-        else:
-            old_done = []
-
-    ## ----------------------------------------
-
-    ## Delete respective data
-
-    for tid in old_pending + old_done:
-        with data() as c, c.cursor() as cur:
-            cur.execute(
-                "DELETE FROM task_data WHERE task_id=%s RETURNING data_id,results_id",
-                (tid,),
-            )
-            links = cur.fetchall()
-            for link in links:
-                if link["results_id"]:
-                    cur.execute(
-                        "DELETE FROM results WHERE results_id=%s", (link["results_id"],)
-                    )
-                cur.execute("DELETE FROM samples WHERE data_id=%s", (link["data_id"],))
-        # Metadata remains, status indicates that associated payload expired.
-        with cfg() as c, c.cursor() as cur:
-            cur.execute(
-                "UPDATE pending_tasks SET status='failed',error_code='expired' WHERE task_id=%s",
-                (tid,),
-            )
-
-    ## ----------------------------------------
-
-    ## Log it
-
-    if old_pending or old_done:
-        logging.info(
-            "cleanup removed payload for %d tasks", len(old_pending) + len(old_done)
+        output_results = model_wrapper.postprocess_class_scores(
+            output_results, n_samples
         )
 
+        ## ----------------------------------------
 
-def task_daily_email(db_adapter, email_list):
-    # Count new tasks
-    # Send email
-    logging.info("task_daily_email - completed")
+        db_adapter.register_task_success(
+            task_id, output_results, model_wrapper.model_name
+        )
+
+    except Exception as e:
+        try:
+            logging.error("prediction task_id=%s error=%s", task_id, str(e))
+
+            db_adapter.register_task_error(task_id, str(e))
+
+        except Exception:
+            pass
 
 
-def task_daily_url(db_adapter, url_list):
+## ----------------------------------------
+
+
+def task_low_frequency_cleanup(db_adapter):
+    try:
+        db_adapter.cleanup_pending_done_tasks()
+
+        db_adapter.cleanup_input_output()
+
+    except Exception as e:
+        logging.error("cleanup error=%s", str(e))
+
+
+## ----------------------------------------
+
+
+def task_daily_summary_email(db_adapter, email_list):
+    try:
+        count_success, count_error, count_pending = (
+            db_adapter.summary_pending_done_tasks(summary_hours=24)
+        )
+
+        ## Send an email with:
+        ## count_success, count_error, count_pending
+
+        ## To each address in:
+        ## email_list
+
+    except Exception as e:
+        logging.error("daily summary email error=%s", str(e))
+
+
+## ----------------------------------------
+
+
+def task_daily_fetch_url(db_adapter, url_list):
+    import requests
+    from requests.adapters import HTTPAdapter
+
     http = requests.Session()
     http.trust_env = False
     http.mount("https://", HTTPAdapter(max_retries=5))

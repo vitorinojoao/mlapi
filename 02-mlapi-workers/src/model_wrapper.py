@@ -10,9 +10,14 @@ class ModelWrapper:
     def __init__(self, model_filepath, class_names=None):
         try:
             self.model = joblib.load(model_filepath)
+            self.model_name = self.model.__class__.__name__
 
         except Exception as e:
-            raise OSError("Could not load a model from the provided filepath") from e
+            raise OSError(
+                "The Wrapper could not load a model from the provided filepath"
+            ) from e
+
+        ## ----------------------------------------
 
         if callable(getattr(self.model, "predict", None)):
             self.predict_fn = self.model.predict
@@ -24,8 +29,8 @@ class ModelWrapper:
 
         else:
             raise TypeError(
-                "The loaded model is not supported yet"
-                + ". It must be callable or have a 'predict' function"
+                "The Wrapper does not yet support the loaded model"
+                + ". The model must be callable or have a 'predict' function"
             )
 
         ## ----------------------------------------
@@ -42,14 +47,14 @@ class ModelWrapper:
 
             except Exception as e:
                 raise TypeError(
-                    "The provided class names list must contain str labels"
+                    "The Wrapper class names list must contain only str labels"
                 ) from e
 
             size = len(class_names)
 
             if int(getattr(self.model, "n_classes_", size)) != size:
                 raise ValueError(
-                    "The provided class names list must have the same size"
+                    "The Wrapper class names list must have the same size"
                     + " as the output of the loaded model"
                 )
 
@@ -63,13 +68,13 @@ class ModelWrapper:
             str(name) for name in getattr(self.model, "feature_names_in_", [])
         ]
 
-        ## ----------------------------------------
+    ## ----------------------------------------
 
     def info(self):
         """Obtain information about the ML model"""
 
         return {
-            "model": self.model.__class__.__name__,
+            "model": self.model_name,
             "predict": self.predict_name,
             "n_classes": self.n_classes,
             "class_names": self.class_names,
@@ -77,10 +82,14 @@ class ModelWrapper:
             "feature_names": self.feature_names,
         }
 
+    ## ----------------------------------------
+
     def predict(self, X):
         """Obtain output predictions of the ML model"""
 
         return self.predict_fn(X)
+
+    ## ----------------------------------------
 
     def postprocess_class_scores(self, y, n_samples):
         """
@@ -94,7 +103,9 @@ class ModelWrapper:
             y = y.reshape(-1)
 
         elif y.ndim > 2 or (y.ndim == 2 and y.shape[0] != n_samples):
-            raise TypeError("The model predictions do not have a valid format.")
+            raise TypeError(
+                "The Wrapper can only postprocess model predictions in a 1D or 2D array-like"
+            )
 
         ## ----------------------------------------
 
@@ -146,6 +157,8 @@ class ModelWrapper:
 
         return y.tolist()
 
+    ## ----------------------------------------
+
     def postprocess_anomaly_scores(self, y, n_samples):
         """
         Postprocess inlier/outlier scores in 1/-1 format.
@@ -158,7 +171,9 @@ class ModelWrapper:
             y = y.reshape(-1)
 
         elif y.ndim > 2 or (y.ndim == 2 and y.shape[0] != n_samples):
-            raise TypeError("The model predictions do not have a valid format.")
+            raise TypeError(
+                "The Wrapper can only postprocess model predictions in a 1D or 2D array-like"
+            )
 
         ## ----------------------------------------
 
