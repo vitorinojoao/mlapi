@@ -4,7 +4,7 @@ name: mlapi
 ## 00 - Docker infrastructure
 ## --------------------------
 
-## Note: INBOUND communication only allowed in 'proxy-service' via port mapping
+## Note: INBOUND communication is currently only allowed in 'proxy-service' via port mapping
 
 networks:
   ## Edge network for [proxy -> app], [worker -> OUTBOUND] communication

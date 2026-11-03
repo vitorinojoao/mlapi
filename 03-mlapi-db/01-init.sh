@@ -19,7 +19,7 @@ read_secret() {
 read_secret db_auth_password "$DB_AUTH_PASSWORD_FILE"
 read_secret db_data_password "$DB_DATA_PASSWORD_FILE"
 
-## PSQL command to initialize with local variables
+## PSQL command to initialize with local variables for DB_AUTH and DB_DATA
 ## Note: double quotes for identifiers (:"db_name"), single quotes for literals (:'db_password')
 psql --dbname postgres \
     --username postgres \

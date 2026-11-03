@@ -2,7 +2,7 @@
 set -Eeuo pipefail
 umask 077
 
-## PSQL command to create DB_DATA_NAME schema
+## Create DB_DATA schema
 ## Note: using postgres superuser only during initialization
 psql --dbname "$DB_DATA_NAME" \
     --username postgres \
@@ -10,16 +10,26 @@ psql --dbname "$DB_DATA_NAME" \
     <<'EOSQL'
 
 CREATE TABLE IF NOT EXISTS tasks_pending (
+    -- Created by default for a new pending task
     task_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    
+    -- Required
     user_id TEXT NOT NULL,
+
+    -- Created by default for a new pending task
     created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE IF NOT EXISTS tasks_done (
+    -- Obtained from a previous pending task
     task_id UUID PRIMARY KEY,
     user_id TEXT NOT NULL,
     created_at TIMESTAMPTZ NOT NULL,
+
+    -- Created by default when task is claimed
     claimed_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    -- Updated when task is done
     done_at TIMESTAMPTZ DEFAULT NULL,
     done_success BOOL DEFAULT NULL,
     done_message TEXT DEFAULT NULL
@@ -28,14 +38,27 @@ CREATE TABLE IF NOT EXISTS tasks_done (
 CREATE TABLE IF NOT EXISTS input_data (
     task_id UUID PRIMARY KEY,
     input_data REAL[] NOT NULL
+
+    CONSTRAINT fk_input_data_tasks_done
+        FOREIGN KEY (task_id)
+        REFERENCES tasks_done(task_id)
+        ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS output_results (
     task_id UUID PRIMARY KEY,
     output_results TEXT[] NOT NULL
+
+    CONSTRAINT fk_output_results_tasks_done
+        FOREIGN KEY (task_id)
+        REFERENCES tasks_done(task_id)
+        ON DELETE CASCADE
 );
 
-CREATE INDEX IF NOT EXISTS idx_tasks_pending_lifo ON tasks_pending (created_at DESC, task_id);
-CREATE INDEX IF NOT EXISTS idx_tasks_pending_fifo ON tasks_pending (created_at ASC, task_id);
+CREATE INDEX IF NOT EXISTS idx_tasks_pending_lifo
+    ON tasks_pending (created_at DESC, task_id);
+
+CREATE INDEX IF NOT EXISTS idx_tasks_pending_fifo
+    ON tasks_pending (created_at ASC, task_id);
 
 EOSQL
