@@ -1,14 +1,15 @@
 # Machine Learning API
 
-A template of a secure Application Programming Interface for Machine Learning models.  
+A template of a secure and scalable API for Machine Learning models.  
 Copyright (c) 2024-2026 João Vitorino  
 
 ## Overview
 
-To deploy ML models in a web server and securely access their predictions,  
-you can use this template and improve it to better suit your needs.  
+To deploy one or more ML models in a backend web server  
+and use a REST API to POST input data and GET output results,  
+you can start from this template and modify it to suit your needs.  
 
-The template is divided into multiple parts:
+The template is divided into multiple parts:  
 
 - **docker-compose.yml** &nbsp;&ndash;&nbsp; The main configuration for Docker services, networks and volumes.
 - **01-mlapi-app** &nbsp;&ndash;&nbsp; Python Flask app with Gunicorn WSGI &nbsp;&ndash;&nbsp; provides default blueprints and routes.
