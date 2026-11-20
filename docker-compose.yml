@@ -58,7 +58,11 @@ services:
       DB_POOL_MAX_CONNECTIONS: 10
       DB_POOL_WORKERS: 2
       DB_POOL_TIMEOUT: 20
-      API_CATEGORICAL_ENCODING_FILEPATH: "${API_CATEGORICAL_ENCODING_FILEPATH:?Set API_CATEGORICAL_ENCODING_FILEPATH in .env}"
+      APPB_FEATURE_ENCODING_FILE: ./resources/categorical_feature_encoding.csv
+      APPB_MODEL_FILE: ./resources/fast_ml_model.joblib
+      APPB_MODEL_CLASS_NAMES_LIST: "[]"
+      REDIS_HOST: redis
+      REDIS_PASSWORD_FILE: /run/secrets/cache_password
       TRUSTED_HOSTS: ${DOMAIN:-api.home.arpa},${IP_ADDRESS:-127.0.0.1},localhost,127.0.0.1
       FLASK_SECRET_KEY_FILE: /run/secrets/flask_secret_key
       SECURITY_PASSWORD_SALT_FILE: /run/secrets/security_password_salt
@@ -71,8 +75,6 @@ services:
       AUTH_FAILURE_LOCKOUT_THRESHOLD: ${AUTH_FAILURE_LOCKOUT_THRESHOLD:-5}
       AUTH_FAILURE_LOCKOUT_SECONDS: ${AUTH_FAILURE_LOCKOUT_SECONDS:-900}
       MAX_REQUEST_BYTES: ${MAX_REQUEST_BYTES:-2000000}
-      REDIS_HOST: redis
-      REDIS_PASSWORD_FILE: /run/secrets/cache_password
       RATE_LIMIT_ENABLED: ${RATE_LIMIT_ENABLED:-true}
       RATE_LIMIT_STRATEGY: ${RATE_LIMIT_STRATEGY:-moving-window}
       RATE_LIMIT_DEFAULT: ${RATE_LIMIT_DEFAULT:-120 per minute}
@@ -103,7 +105,7 @@ services:
     cap_drop: [ ALL ]
     security_opt: [ no-new-privileges:true ]
     healthcheck:
-      test: [ 'CMD', 'python', '-c', 'import urllib.request; urllib.request.urlopen("http://127.0.0.1:8000/health", timeout=5)' ]
+      test: [ "CMD", "python", "-c", "import os, urllib.request; urllib.request.urlopen(f\"http://127.0.0.1:{os.getenv('APP_PORT')}/health\", timeout=5)" ]
       start_period: 60s
       start_interval: 5s
       interval: 60s
@@ -140,6 +142,8 @@ services:
       DB_POOL_MAX_CONNECTIONS: 10
       DB_POOL_WORKERS: 2
       DB_POOL_TIMEOUT: 20
+      WRKR_MODEL_FILE: ./resources/slow_ml_model.joblib
+      WRKR_MODEL_CLASS_NAMES_LIST: "[]"
       WRKR_SCHEDULER_MAX_THREADS: 10
       WRKR_SCHEDULER_MAX_PROCESSES: 3
       WRKR_SCHEDULER_RESPAWN_PROCESSES: 100
@@ -149,8 +153,6 @@ services:
       WRKR_TASKS_DONE_TIME_TO_LIVE: 172800
       WRKR_INPUT_DATA_TIME_TO_LIVE: 1
       WRKR_OUTPUT_RESULTS_TIME_TO_LIVE: 3600
-      WRKR_MODEL_FILE: ./resources/slow_ml_model.joblib
-      WRKR_MODEL_CLASS_NAMES_LIST: "[]"
       WRKR_SEND_EMAIL_LIST: "[ admin@example.com ]"
       WRKR_FETCH_URL_LIST: "[ https://example.com , http://192.0.2.1 ]"
     secrets:
@@ -166,7 +168,7 @@ services:
     cap_drop: [ ALL ]
     security_opt: [ no-new-privileges:true ]
     healthcheck:
-      test: [ 'CMD-SHELL', 'grep -q "run-workers.py" /proc/*/cmdline' ]
+      test: [ "CMD-SHELL", "grep -aq '[r]un-workers.py' /proc/*/cmdline" ]
       start_period: 60s
       start_interval: 5s
       interval: 60s
@@ -220,7 +222,7 @@ services:
     cap_add: [ CHOWN, SETUID, SETGID, DAC_OVERRIDE, FOWNER ]
     security_opt: [ no-new-privileges:true ]
     healthcheck:
-      test: [ 'CMD-SHELL', 'pg_isready -U postgres -d postgres' ]
+      test: [ "CMD-SHELL", "pg_isready -U postgres -d postgres" ]
       start_period: 60s
       start_interval: 5s
       interval: 60s
@@ -260,7 +262,7 @@ services:
     cap_drop: [ ALL ]
     security_opt: [ no-new-privileges:true ]
     healthcheck:
-      test: [ 'CMD-SHELL', 'REDISCLI_AUTH="$$(cat /run/secrets/cache_password)" redis-cli ping | grep -q PONG' ]
+      test: [ "CMD-SHELL", "REDISCLI_AUTH=\"$$(cat /run/secrets/cache_password)\" redis-cli ping | grep -q PONG" ]
       start_period: 60s
       start_interval: 5s
       interval: 60s
@@ -306,7 +308,7 @@ services:
     cap_add: [ CHOWN, SETUID, SETGID, NET_BIND_SERVICE ]
     security_opt: [ no-new-privileges:true ]
     healthcheck:
-      test: [ 'CMD', 'nginx', '-t' ]
+      test: [ "CMD", "nginx", "-t" ]
       start_period: 60s
       start_interval: 5s
       interval: 60s

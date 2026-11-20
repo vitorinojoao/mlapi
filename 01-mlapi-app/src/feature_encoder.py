@@ -27,8 +27,8 @@ class FeatureEncoder:
                     or "encoding" not in header
                 ):
                     raise TypeError(
-                        "The Encoder requires the loaded CSV file to contain a header specifying"
-                        + " 'column', 'category', and 'encoding'"
+                        "The Encoder requires the loaded CSV file to contain a header"
+                        + " specifying 'column', 'category', and 'encoding'"
                     )
 
                 ## Obtain the csv positions of the encodings

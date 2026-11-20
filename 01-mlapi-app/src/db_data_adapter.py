@@ -6,7 +6,7 @@ from psycopg_pool import ConnectionPool
 # from psycopg.types.json import Jsonb
 
 
-class DBAdapter:
+class DBDataAdapter:
     """Object to connect and communicate with a database"""
 
     def __init__(

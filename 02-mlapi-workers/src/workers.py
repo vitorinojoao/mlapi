@@ -12,20 +12,17 @@ from src.model_wrapper import ModelWrapper
 
 
 def start_workers():
-    email_list = read_env_list("WRKR_SEND_EMAIL_LIST")
-    url_list = read_env_list("WRKR_FETCH_URL_LIST")
+    logging.warning("start_workers")
 
     ## ----------------------------------------
 
-    ## Create an adapter for a database connection pool
-    db_password = read_secret("DB_DATA_PASSWORD_FILE")
-
+    ## Create an adapter for the DB_DATA connection pool
     db_adapter = DBAdapter(
         db_host=os.getenv("DB_HOST"),
         db_port=os.getenv("DB_PORT"),
         db_name=os.getenv("DB_DATA_NAME"),
         db_user=os.getenv("DB_DATA_USER"),
-        db_password=db_password,
+        db_password=read_secret_file("DB_DATA_PASSWORD_FILE"),
         db_pool_min=os.getenv("DB_POOL_MIN_CONNECTIONS"),
         db_pool_max=os.getenv("DB_POOL_MAX_CONNECTIONS"),
         db_pool_workers=os.getenv("DB_POOL_WORKERS"),
@@ -43,12 +40,20 @@ def start_workers():
     )
     logging.warning("db_adapter created")
 
-    ## Create a wrapper for the ML model
+    ## ----------------------------------------
+
+    ## Create a wrapper for an ML model
     model_wrapper = ModelWrapper(
         model_filepath=os.getenv("WRKR_MODEL_FILE"),
         class_names=read_env_list("WRKR_MODEL_CLASS_NAMES_LIST"),
     )
     logging.warning("model_wrapper created")
+
+    ## ----------------------------------------
+
+    ## Read additional environmental variables
+    email_list = read_env_list("WRKR_SEND_EMAIL_LIST")
+    url_list = read_env_list("WRKR_FETCH_URL_LIST")
 
     ## ----------------------------------------
 
@@ -147,21 +152,21 @@ def start_workers():
     except SystemExit:
         logging.warning("stopping due to system exit")
 
-    ## SAFEGUARD
+    ## EXIT SAFEGUARD
     finally:
 
         ## Shutdown the schedulers
         thread_scheduler.shutdown(wait=True)
         process_scheduler.shutdown(wait=False)
 
-        ## Close the database connection pool
+        ## Close the DB_DATA connection pool
         db_adapter.close()
 
 
 ## ----------------------------------------
 
 
-def read_secret(filepath_var):
+def read_secret_file(filepath_var):
     ## Function to read a secret file and return a local variable
 
     res = None
