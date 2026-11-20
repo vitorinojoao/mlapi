@@ -1,3 +1,7 @@
+"""blueprint_private"""
+
+## Should only be reachable by authenticated admins
+
 import os
 from datetime import datetime, timezone
 from flask import Blueprint, jsonify, request, g

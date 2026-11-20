@@ -1,3 +1,37 @@
+"""blueprint_tasks"""
+
+## Should be reachable by authenticated users
+
+from flask import Blueprint, current_app, jsonify, request
+from flask_security import auth_required, current_user, roles_accepted
+bp = Blueprint("user_api", __name__)
+
+@bp.post("/tasks/samples")
+@auth_required("token")
+@roles_accepted("provider", "prosumer")
+def submit_samples():
+    body = request.get_json(silent=True)
+    if not isinstance(body, dict) or not isinstance(body.get("task_id"), str) or "samples" not in body:
+        return jsonify(error="invalid_request", message="task_id and samples are required."), 400
+    try:
+        current_app.extensions["data_db_adapter"].insert_samples(body["task_id"], current_user.id, body["samples"])
+    except Exception:
+        current_app.logger.exception("Sample persistence failed")
+        return jsonify(error="storage_unavailable", message="Could not persist samples."), 503
+    return jsonify(task_id=body["task_id"]), 201
+
+@bp.get("/tasks/<task_id>/data")
+@auth_required("token")
+@roles_required("consumer", "prosumer")
+def get_task_data(task_id):
+    row = current_app.extensions["data_db_adapter"].fetch_task_data(task_id, current_user.id)
+    if row is None:
+        return jsonify(error="not_found", message="Task not found."), 404
+    return jsonify(data=row["payload"], result_id=row["result_id"])
+
+
+
+
 import os, uuid
 from datetime import datetime
 from flask import Blueprint, current_app, jsonify, request, g

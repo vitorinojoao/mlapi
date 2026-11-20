@@ -1,3 +1,7 @@
+"""blueprint_auth"""
+
+## Can be accessed by all unauthenticated users
+
 import os
 from flask import Blueprint, current_app, jsonify, request, current_user
 from flask_security import auth_required, hash_password
@@ -12,24 +16,6 @@ def require_json_for_mutations():
         return jsonify(error="Content-Type must be application/json"), 415
     if "auth_token" in request.args:
         return jsonify(error="Tokens must be sent in the Authentication-Token header"), 400
-
-@auth_bp.post("/email")
-@limiter.limit(os.getenv("RATE_LIMIT_CREDENTIAL_CHANGES", "5 per hour"))
-@auth_required("token", within=5)
-def change_email():
-    try: body = parse_json()
-    except (ValueError, Exception): return fail("Invalid JSON request", 400)
-    email = normalize_email(body.get("email"))
-    if not email: return fail("Valid email required", 400)
-    existing = datastore.find_user(email=email)
-    if existing and existing.id != current_user.id: return fail("Email already in use", 409)
-    current_user.email = email
-    datastore.set_uniquifier(current_user)
-    datastore.commit()
-    with cfg_conn() as c, c.cursor() as cur:
-        cur.execute("UPDATE user_directory SET email=%s WHERE user_id=%s", (email, str(current_user.id)))
-        cur.execute("INSERT INTO user_audit(user_id,action,details) VALUES (%s,'email_changed',%s)", (str(current_user.id), Jsonb({"by_user_id": str(current_user.id)})))
-    return jsonify(status="email_changed", reauthenticate=True)
 
 @auth_bp.post("/password")
 @limiter.limit(os.getenv("RATE_LIMIT_CREDENTIAL_CHANGES", "5 per hour"))

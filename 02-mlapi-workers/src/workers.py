@@ -17,16 +17,19 @@ def start_workers():
 
     ## ----------------------------------------
 
-    ## Create an adapter for the database
+    ## Create an adapter for a database connection pool
     db_password = read_secret("DB_DATA_PASSWORD_FILE")
 
     db_adapter = DBAdapter(
         db_host=os.getenv("DB_HOST"),
         db_port=os.getenv("DB_PORT"),
-        db_timeout=os.getenv("DB_TIMEOUT"),
         db_name=os.getenv("DB_DATA_NAME"),
         db_user=os.getenv("DB_DATA_USER"),
         db_password=db_password,
+        db_pool_min=os.getenv("DB_POOL_MIN_CONNECTIONS"),
+        db_pool_max=os.getenv("DB_POOL_MAX_CONNECTIONS"),
+        db_pool_workers=os.getenv("DB_POOL_WORKERS"),
+        db_pool_timeout=os.getenv("DB_POOL_TIMEOUT"),
         tasks_order_last_in_first_out=os.getenv(
             "WRKR_TASKS_ORDER_LAST_IN_FIRST_OUT", "t"
         )
@@ -144,10 +147,15 @@ def start_workers():
     except SystemExit:
         logging.warning("stopping due to system exit")
 
-    ## Stop without waiting for heavyweight tasks
+    ## SAFEGUARD
     finally:
+
+        ## Shutdown the schedulers
         thread_scheduler.shutdown(wait=True)
         process_scheduler.shutdown(wait=False)
+
+        ## Close the database connection pool
+        db_adapter.close()
 
 
 ## ----------------------------------------

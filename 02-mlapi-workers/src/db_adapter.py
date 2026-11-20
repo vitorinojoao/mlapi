@@ -1,7 +1,9 @@
 """db_adapter"""
 
-import psycopg
-from psycopg.types.json import Jsonb
+from psycopg_pool import ConnectionPool
+
+# from psycopg.rows import tuple_row
+# from psycopg.types.json import Jsonb
 
 
 class DBAdapter:
@@ -11,10 +13,13 @@ class DBAdapter:
         self,
         db_host,
         db_port,
-        db_timeout,
         db_name,
         db_user,
         db_password,
+        db_pool_min,
+        db_pool_max,
+        db_pool_workers,
+        db_pool_timeout,
         tasks_order_last_in_first_out=None,
         tasks_summary_hours=None,
         tasks_pending_time_to_live=None,
@@ -23,15 +28,29 @@ class DBAdapter:
         output_results_time_to_live=None,
     ):
         try:
-            self.db_host = str(db_host)
-            self.db_port = int(db_port)
-            self.db_timeout = int(db_timeout)
-            self.db_name = str(db_name)
-            self.db_user = str(db_user)
-            self.db_password = str(db_password)
+            db_host = str(db_host)
+            db_port = str(int(db_port))
+            db_name = str(db_name)
+            db_user = str(db_user)
+            db_password = str(db_password)
 
         except Exception as e:
-            raise ValueError("The DB requires valid credentials") from e
+            raise ValueError(
+                "The DB Adapter requires valid connection credentials"
+            ) from e
+
+        ## ----------------------------------------
+
+        try:
+            db_pool_min = int(db_pool_min)
+            db_pool_max = int(db_pool_max)
+            db_pool_workers = int(db_pool_workers)
+            db_pool_timeout = int(db_pool_timeout)
+
+        except Exception as e:
+            raise ValueError(
+                "The DB Adapter requires a valid connection pool configuration"
+            ) from e
 
         ## ----------------------------------------
 
@@ -151,20 +170,31 @@ class DBAdapter:
 
         ## ----------------------------------------
 
-        self.connect_kwargs = {
-            "host": self.db_host,
-            "port": self.db_port,
-            "connect_timeout": self.db_timeout,
-            "dbname": self.db_name,
-            "user": self.db_user,
-            "password": self.db_password,
-            "autocommit": False,
-        }
+        self.pool = ConnectionPool(
+            conninfo=(
+                f"host={db_host}"
+                f" port={db_port}"
+                f" dbname={db_name}"
+                f" user={db_user}"
+                f" password={db_password}"
+            ),
+            min_size=db_pool_min,
+            max_size=db_pool_max,
+            num_workers=db_pool_workers,
+            timeout=db_pool_timeout,
+            kwargs={"autocommit": False},
+            open=True,
+        )
+
+    ## ----------------------------------------
+
+    def close(self):
+        self.pool.close()
 
     ## ----------------------------------------
 
     def claim_pending_task(self):
-        with psycopg.connect(**self.connect_kwargs) as c, c.cursor() as cur:
+        with self.pool.connect() as c, c.cursor() as cur:
             cur.execute(
                 """
                 WITH claimed AS (
@@ -207,7 +237,7 @@ class DBAdapter:
                 "The DB currently requires output results to be a list of str"
             ) from e
 
-        with psycopg.connect(**self.connect_kwargs) as c, c.cursor() as cur:
+        with self.pool.connect() as c, c.cursor() as cur:
             cur.execute(
                 """
                 WITH updated AS (
@@ -229,7 +259,7 @@ class DBAdapter:
     ## ----------------------------------------
 
     def register_task_error(self, task_id, error_message):
-        with psycopg.connect(**self.connect_kwargs) as c, c.cursor() as cur:
+        with self.pool.connect() as c, c.cursor() as cur:
             cur.execute(
                 """
                 UPDATE tasks_done
@@ -289,7 +319,7 @@ class DBAdapter:
         else:
             return
 
-        with psycopg.connect(**self.connect_kwargs) as c, c.cursor() as cur:
+        with self.pool.connect() as c, c.cursor() as cur:
             cur.execute(query, args)
 
     ## ----------------------------------------
@@ -338,7 +368,7 @@ class DBAdapter:
         else:
             return
 
-        with psycopg.connect(**self.connect_kwargs) as c, c.cursor() as cur:
+        with self.pool.connect() as c, c.cursor() as cur:
             cur.execute(
                 subquery + """
                 deldata AS (
@@ -360,7 +390,7 @@ class DBAdapter:
     ## ----------------------------------------
 
     def summary_pending_done_tasks(self):
-        with psycopg.connect(**self.connect_kwargs) as c, c.cursor() as cur:
+        with self.pool.connect() as c, c.cursor() as cur:
             cur.execute(
                 """
                 WITH count_success AS (

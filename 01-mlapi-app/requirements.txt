@@ -4,7 +4,7 @@
 gunicorn==23.*
 
 ## PostgreSQL database connection
-psycopg[binary]==3.*
+psycopg[binary,pool]==3.*
 
 ## Flask app dependencies
 flask==3.*

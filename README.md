@@ -6,36 +6,16 @@ Copyright (c) 2024-2026 João Vitorino
 ## Overview
 
 To deploy ML models in a web server and securely access their predictions,  
-you can use this API template and improve it to better suit your needs.  
+you can use this template and improve it to better suit your needs.  
 
-The `app.py` is the main Python file with the creation of a Flask application,  
-the initialization of several blueprints, and the setup of the default routes.  
+The template is divided into multiple parts:
 
-The template is divided into three folders:
-
-- **mlapi** - the entire Python code of the API with useful comments (e.g., blueprints and objects).
-- **resources** - the resources required for the API to work properly (e.g., models and encodings).
-- **files** - supplementary files to help you interact with the API (e.g., commands and requests).
-
-![Overview](https://raw.githubusercontent.com/vitorinojoao/mlapi/main/files/overview.png)
-
-## Sample Code
-
-&rarr; **How to preprocess the JSON body of a request?**  
-A 2D input array can be created, converting categorical features into numerical encodings.  
-You can use and improve the code of `data_preprocessor.py`.  
-
-&rarr; **How to load and use an ML model in an efficient way?**  
-A model can be wrapped in a single object that is used to respond to every request.  
-You can use and improve the code of `model_wrapper.py`.  
-
-&rarr; **How to postprocess the anomaly or class predictions?**  
-A 1D output array can be created, converting anomaly scores or confidence scores to labels.  
-You can use and improve the code of `data_postprocessor.py`.  
-
-&rarr; **How to send multiple requests to different routes?**  
-Several GET and POST requests can be sent by each client, as long as they use valid tokens.  
-You can see the possible requests in `mlapirequests.json`.  
+- **docker-compose.yml** &nbsp;&ndash;&nbsp; The main configuration for Docker services, networks and volumes.
+- **01-mlapi-app** &nbsp;&ndash;&nbsp; Python Flask app with Gunicorn WSGI &nbsp;&ndash;&nbsp; provides default blueprints and routes.
+- **02-mlapi-workers** &nbsp;&ndash;&nbsp; Python worker processes/threads with APScheduler &nbsp;&ndash;&nbsp; provides default ML tasks.
+- **03-mlapi-db** &nbsp;&ndash;&nbsp; PostgreSQL primary relational database &nbsp;&ndash;&nbsp; provides default auth and data schemas.
+- **04-mlapi-cache** &nbsp;&ndash;&nbsp; Redis distributed in-memory cache &nbsp;&ndash;&nbsp; provides an efficient cache.
+- **05-mlapi-proxy** &nbsp;&ndash;&nbsp; Nginx SSL/TLS reverse proxy with rate limiting &nbsp;&ndash;&nbsp; provides a secure proxy.
 
 ## Docker Secrets
 

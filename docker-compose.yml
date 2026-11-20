@@ -48,13 +48,16 @@ services:
     environment:
       DB_HOST: db-service
       DB_PORT: "${DB_PORT:?Set DB_PORT in .env}"
-      DB_TIMEOUT: 5
       DB_AUTH_NAME: "${DB_AUTH_NAME:?Set DB_AUTH_NAME in .env}"
       DB_AUTH_USER: "${DB_AUTH_USER:?Set DB_AUTH_USER in .env}"
       DB_AUTH_PASSWORD_FILE: /run/secrets/db_auth_password
       DB_DATA_NAME: "${DB_DATA_NAME:?Set DB_DATA_NAME in .env}"
       DB_DATA_USER: "${DB_DATA_USER:?Set DB_DATA_USER in .env}"
       DB_DATA_PASSWORD_FILE: /run/secrets/db_data_password
+      DB_POOL_MIN_CONNECTIONS: 3
+      DB_POOL_MAX_CONNECTIONS: 10
+      DB_POOL_WORKERS: 2
+      DB_POOL_TIMEOUT: 20
       API_CATEGORICAL_ENCODING_FILEPATH: "${API_CATEGORICAL_ENCODING_FILEPATH:?Set API_CATEGORICAL_ENCODING_FILEPATH in .env}"
       TRUSTED_HOSTS: ${DOMAIN:-api.home.arpa},${IP_ADDRESS:-127.0.0.1},localhost,127.0.0.1
       FLASK_SECRET_KEY_FILE: /run/secrets/flask_secret_key
@@ -130,10 +133,13 @@ services:
     environment:
       DB_HOST: db-service
       DB_PORT: "${DB_PORT:?Set DB_PORT in .env}"
-      DB_TIMEOUT: 5
       DB_DATA_NAME: "${DB_DATA_NAME:?Set DB_DATA_NAME in .env}"
       DB_DATA_USER: "${DB_DATA_USER:?Set DB_DATA_USER in .env}"
       DB_DATA_PASSWORD_FILE: /run/secrets/db_data_password
+      DB_POOL_MIN_CONNECTIONS: 3
+      DB_POOL_MAX_CONNECTIONS: 10
+      DB_POOL_WORKERS: 2
+      DB_POOL_TIMEOUT: 20
       WRKR_SCHEDULER_MAX_THREADS: 10
       WRKR_SCHEDULER_MAX_PROCESSES: 3
       WRKR_SCHEDULER_RESPAWN_PROCESSES: 100
