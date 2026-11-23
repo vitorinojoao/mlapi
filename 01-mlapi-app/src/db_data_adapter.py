@@ -93,14 +93,29 @@ class DBDataAdapter:
 
     ## ----------------------------------------
 
-    def fetch_task_status(self, user_id, task_id):
+    def fetch_task_results(self, user_id, task_id):
+        with self.pool.connect() as c, c.cursor() as cur:
+            cur.execute(
+                """
+                SELECT tor.output_results
+                FROM output_results tor
+                WHERE tor.task_id = %s
+                    AND tor.user_id = %s
+                ;
+                """,
+                (task_id, user_id),
+            )
+
+            return cur.fetchone()
+
+    ## ----------------------------------------
+
+    def check_task_status(self, user_id, task_id):
         with self.pool.connect() as c, c.cursor() as cur:
             cur.execute(
                 """
                 WITH fetched AS (
-                    SELECT task_id,
-                        user_id,
-                        created_at,
+                    SELECT created_at,
                         NULL::TIMESTAMPTZ AS claimed_at,
                         NULL::TIMESTAMPTZ AS done_at,
                         NULL::BOOL AS done_success,
@@ -108,13 +123,11 @@ class DBDataAdapter:
                     FROM tasks_pending
                     WHERE task_id = %s
                         AND user_id = %s
-                ),
+                )
                 SELECT *
                 FROM fetched
                 UNION ALL
-                SELECT task_id,
-                    user_id,
-                    created_at,
+                SELECT created_at,
                     claimed_at,
                     done_at,
                     done_success,

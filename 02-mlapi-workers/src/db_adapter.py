@@ -215,10 +215,10 @@ class DBAdapter:
                     SELECT task_id, user_id, created_at
                     FROM deleted
                 )
-                SELECT d.task_id, d.user_id, d.created_at, td.input_data
-                FROM deleted d
-                LEFT JOIN input_data td
-                ON d.task_id = td.task_id
+                SELECT tdl.task_id, tin.input_data
+                FROM deleted tdl
+                LEFT JOIN input_data tin
+                ON tdl.task_id = tin.task_id
                 ;
                 """,
                 (self.tasks_order_by,),
@@ -246,11 +246,11 @@ class DBAdapter:
                         done_success = TRUE,
                         done_message = %s
                     WHERE task_id = %s
-                    RETURNING task_id
+                    RETURNING task_id, user_id
                 )
-                INSERT INTO output_results (task_id, output_results)
-                SELECT u.task_id, %s
-                FROM updated u
+                INSERT INTO output_results (task_id, user_id, output_results)
+                SELECT updated.task_id, updated.user_id, %s
+                FROM updated
                 ;
                 """,
                 (success_message, task_id, output_results),
@@ -277,7 +277,7 @@ class DBAdapter:
     def cleanup_input_output(self):
         if self.input_data_ttl and self.output_results_ttl:
             query = """
-                WITH deldata AS (
+                WITH deleted_input AS (
                     DELETE FROM input_data 
                     WHERE task_id IN (
                         SELECT task_id
@@ -371,7 +371,7 @@ class DBAdapter:
         with self.pool.connect() as c, c.cursor() as cur:
             cur.execute(
                 subquery + """
-                deldata AS (
+                deleted_input AS (
                     DELETE FROM input_data 
                     WHERE task_id IN (
                         SELECT task_id
@@ -393,26 +393,26 @@ class DBAdapter:
         with self.pool.connect() as c, c.cursor() as cur:
             cur.execute(
                 """
-                WITH count_success AS (
-                    SELECT COUNT(task_id) AS suval
+                WITH csuc AS (
+                    SELECT COUNT(task_id) AS count_success
                     FROM tasks_done
                     WHERE done_success = TRUE
                         AND done_at >= CURRENT_TIMESTAMP - INTERVAL '%s hours'
                         AND done_at < CURRENT_TIMESTAMP
                 ),
-                count_error AS (
-                    SELECT COUNT(task_id) AS erval
+                cerr AS (
+                    SELECT COUNT(task_id) AS count_error
                     FROM tasks_done
                     WHERE done_success = FALSE
                         AND done_at >= CURRENT_TIMESTAMP - INTERVAL '%s hours'
                         AND done_at < CURRENT_TIMESTAMP
                 ),
-                count_pending AS (
-                    SELECT COUNT(task_id) AS peval
+                cpen AS (
+                    SELECT COUNT(task_id) AS count_pending
                     FROM tasks_pending
                 )
-                SELECT count_success.suval, count_error.erval, count_pending.peval
-                FROM count_success, count_error, count_pending;
+                SELECT csuc.count_success, cerr.count_error, cpen.count_pending
+                FROM csuc, cerr, cpen;
                 ;
                 """,
                 (self.tasks_summary_hours, self.tasks_summary_hours),

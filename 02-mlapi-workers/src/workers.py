@@ -212,7 +212,7 @@ def task_high_frequency_prediction(db_adapter, model_wrapper):
         claimed = db_adapter.claim_pending_task()
 
         if claimed:
-            task_id, user_id, created_at, input_data = claimed
+            task_id, input_data = claimed
         else:
             return
 

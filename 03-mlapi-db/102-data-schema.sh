@@ -9,6 +9,8 @@ psql --dbname "$DB_DATA_NAME" \
     --set ON_ERROR_STOP=1 \
     <<'EOSQL'
 
+-- ----------------------------------------
+
 CREATE TABLE IF NOT EXISTS tasks_pending (
     -- Created by default for a new pending task
     task_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -19,6 +21,8 @@ CREATE TABLE IF NOT EXISTS tasks_pending (
     -- Created by default for a new pending task
     created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
+
+-- ----------------------------------------
 
 CREATE TABLE IF NOT EXISTS tasks_done (
     -- Obtained from a previous pending task
@@ -35,6 +39,8 @@ CREATE TABLE IF NOT EXISTS tasks_done (
     done_message TEXT DEFAULT NULL
 );
 
+-- ----------------------------------------
+
 CREATE TABLE IF NOT EXISTS input_data (
     task_id UUID PRIMARY KEY,
     input_data REAL[] NOT NULL
@@ -45,8 +51,11 @@ CREATE TABLE IF NOT EXISTS input_data (
         ON DELETE CASCADE
 );
 
+-- ----------------------------------------
+
 CREATE TABLE IF NOT EXISTS output_results (
     task_id UUID PRIMARY KEY,
+    user_id TEXT NOT NULL,
     output_results TEXT[] NOT NULL
 
     CONSTRAINT fk_output_results_tasks_done
@@ -55,10 +64,14 @@ CREATE TABLE IF NOT EXISTS output_results (
         ON DELETE CASCADE
 );
 
+-- ----------------------------------------
+
 CREATE INDEX IF NOT EXISTS idx_tasks_pending_lifo
     ON tasks_pending (created_at DESC, task_id);
 
 CREATE INDEX IF NOT EXISTS idx_tasks_pending_fifo
     ON tasks_pending (created_at ASC, task_id);
+
+-- ----------------------------------------
 
 EOSQL

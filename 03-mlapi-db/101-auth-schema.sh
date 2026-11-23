@@ -9,11 +9,15 @@ psql --dbname "$DB_AUTH_NAME" \
     --set ON_ERROR_STOP=1 \
     <<'EOSQL'
 
+-- ----------------------------------------
+
 CREATE TABLE IF NOT EXISTS roles (
     id SERIAL PRIMARY KEY,
     name VARCHAR(80) NOT NULL UNIQUE,
     description VARCHAR(255)
 );
+
+-- ----------------------------------------
 
 CREATE TABLE IF NOT EXISTS users (
     id SERIAL PRIMARY KEY,
@@ -36,6 +40,8 @@ CREATE TABLE IF NOT EXISTS users (
         CHECK (login_count IS NULL OR login_count >= 0)
 );
 
+-- ----------------------------------------
+
 CREATE TABLE IF NOT EXISTS user_roles (
     user_id INTEGER NOT NULL,
     role_id INTEGER NOT NULL,
@@ -53,6 +59,8 @@ CREATE TABLE IF NOT EXISTS user_roles (
         ON DELETE CASCADE
 );
 
+-- ----------------------------------------
+
 CREATE INDEX IF NOT EXISTS idx_users_email
     ON users(email);
 
@@ -61,5 +69,7 @@ CREATE INDEX IF NOT EXISTS idx_users_fs_uniquifier
 
 CREATE INDEX IF NOT EXISTS idx_user_roles_role_id
     ON user_roles(role_id);
+
+-- ----------------------------------------
 
 EOSQL
