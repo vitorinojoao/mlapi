@@ -14,9 +14,8 @@ BEGIN;
 INSERT INTO roles
     (name, description)
 VALUES
-    ('provider',    'Role to post tasks'),
-    ('consumer',    'Role to get task results'),
-    ('prosumer',    'Role to post and get tasks'),
+    ('provider',    'Role to post task input data'),
+    ('consumer',    'Role to get task output results'),
     ('privileged',  'Role to access task audit information'),
     ('admin',       'Role to manage configuration and users')
 ON CONFLICT (name) DO NOTHING;

@@ -62,42 +62,40 @@ class FeatureEncoder:
 
     ## ----------------------------------------
 
-    def preprocess(self, content):
-        """Preprocess input data with categorical features"""
+    def preprocess(self, content, create_array=False):
+        """Preprocess input data samples with categorical features"""
 
         if content is None:
             raise ValueError("The content must not be empty.")
 
         if not isinstance(content, list) or len(content) == 0:
             raise ValueError(
-                "The Encoder requires input data to be a 'list of lists',"
-                + " representing a 2D array in the (n_samples, n_features) shape."
+                "The content must be a 'list of lists', representing"
+                + " a 2D array in the (n_samples, n_features) shape."
             )
 
         ## Convert each category of each categorical feature
-        if self.encoding_table:
-            res = np.array(
-                [
-                    [
-                        (
-                            ## Use encoding
-                            self.encoding_table[col][sample[col].lower()]
-                            ## If value is of type string
-                            if isinstance(sample[col], str)
-                            ## And column position is in encoding table
-                            and col in self.encoding_table
-                            ## And string has an encoding
-                            and sample[col].lower() in self.encoding_table[col]
-                            ## Otherwise, use value
-                            else sample[col]
-                        )
-                        for col in range(len(sample))
-                    ]
-                    for sample in content
-                ]
-            )
+        samples = [
+            [
+                (
+                    ## Use encoding
+                    self.encoding_table[feat][samp[feat].lower()]
+                    ## If value is of type string
+                    if isinstance(samp[feat], str)
+                    ## And feature position is in encoding table
+                    and feat in self.encoding_table
+                    ## And string has an encoding
+                    and samp[feat].lower() in self.encoding_table[feat]
+                    ## Otherwise, use value
+                    else samp[feat]
+                )
+                for feat in range(len(samp))
+            ]
+            for samp in content
+        ]
 
-        else:
-            res = np.array(content)
+        if create_array:
+            samples = np.array(samples)
+            return samples, samples.shape[0]
 
-        return res, res.shape[0]
+        return samples, len(samples)

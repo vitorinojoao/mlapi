@@ -10,9 +10,51 @@ from apscheduler.schedulers.background import BackgroundScheduler, BlockingSched
 from src.db_adapter import DBAdapter
 from src.model_wrapper import ModelWrapper
 
+## ----------------------------------------
+
+
+def read_secret_file(filepath_var):
+    ## Utility function to read a secret file and return a local variable
+    res = None
+    try:
+        path = Path(os.getenv(filepath_var))
+        with open(path, "r") as f:
+            res = f.read().strip()
+
+    except Exception as e:
+        raise RuntimeError(
+            f"Missing or unreadable secret file at {filepath_var}"
+        ) from e
+
+    if res:
+        return res
+    else:
+        raise RuntimeError(f"Empty file without a secret at {filepath_var}")
+
+
+## ----------------------------------------
+
+
+def read_env_list(list_var, default=None):
+    ## Utility function to read and convert a list from an environmental variable
+    res = [
+        item.strip(" ")
+        for item in str(os.getenv(list_var, "")).strip("([ ])").split(",")
+        if item != ""
+    ]
+
+    if res:
+        return res
+    else:
+        return default
+
+
+## ----------------------------------------
+
 
 def start_workers():
-    logging.warning("start_workers")
+    ## Main function that is called by the entrypoint "run-workers.py"
+    logging.warning("entrypoint")
 
     ## ----------------------------------------
 
@@ -161,47 +203,6 @@ def start_workers():
 
         ## Close the DB_DATA connection pool
         db_adapter.close()
-
-
-## ----------------------------------------
-
-
-def read_secret_file(filepath_var):
-    ## Function to read a secret file and return a local variable
-
-    res = None
-    try:
-        path = Path(os.getenv(filepath_var))
-        with open(path, "r") as f:
-            res = f.read().strip()
-
-    except Exception as e:
-        raise RuntimeError(
-            f"Missing or unreadable secret file at {filepath_var}"
-        ) from e
-
-    if res:
-        return res
-    else:
-        raise RuntimeError(f"Empty file without a secret at {filepath_var}")
-
-
-## ----------------------------------------
-
-
-def read_env_list(list_var, default=None):
-    ## Function to read and convert a list from an environmental variable
-
-    res = [
-        item.strip(" ")
-        for item in str(os.getenv(list_var, "")).strip("([ ])").split(",")
-        if item != ""
-    ]
-
-    if res:
-        return res
-    else:
-        return default
 
 
 ## ----------------------------------------

@@ -2,7 +2,7 @@
 
 from psycopg_pool import ConnectionPool
 
-# from psycopg.rows import tuple_row
+# from psycopg.rows import dict_row, tuple_row
 # from psycopg.types.json import Jsonb
 
 
@@ -89,7 +89,7 @@ class DBDataAdapter:
                 (user_id, input_data),
             )
 
-            return cur.fetchone()
+            return cur.fetchone()[0]
 
     ## ----------------------------------------
 

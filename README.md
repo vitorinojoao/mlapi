@@ -5,9 +5,9 @@ Copyright (c) 2024-2026 João Vitorino
 
 ## Overview
 
-To deploy one or more ML models in a backend production server,  
-following cyber security best-practices and software design principles,  
-you can start from this template and modify it to better suit your needs.  
+To deploy one or more ML models in a production-ready backend server,  
+you should adjust the configuration and improve the code of this template,  
+following cyber security best-practices and software design principles.  
 
 The template is divided into multiple parts:  
 

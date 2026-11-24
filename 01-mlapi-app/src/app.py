@@ -17,12 +17,57 @@ from src.feature_encoder import FeatureEncoder
 from src.model_wrapper import ModelWrapper
 
 from src.blueprint_auth import create_blueprint_auth
-from src.blueprint_private import create_blueprint_private
+from src.blueprint_manage import create_blueprint_manage
+from src.blueprint_model import create_blueprint_model
 from src.blueprint_tasks import create_blueprint_tasks
+
+## ----------------------------------------
+
+
+def read_secret_file(filepath_var):
+    ## Utility function to read a secret file and return a local variable
+    res = None
+    try:
+        path = Path(os.getenv(filepath_var))
+        with open(path, "r") as f:
+            res = f.read().strip()
+
+    except Exception as e:
+        raise RuntimeError(
+            f"Missing or unreadable secret file at {filepath_var}"
+        ) from e
+
+    if res:
+        return res
+    else:
+        raise RuntimeError(f"Empty file without a secret at {filepath_var}")
+
+
+## ----------------------------------------
+
+
+def read_env_list(list_var, default=None):
+    ## Utility function to read and convert a list from an environmental variable
+    res = [
+        item.strip(" ")
+        for item in str(os.getenv(list_var, "")).strip("([ ])").split(",")
+        if item != ""
+    ]
+
+    if res:
+        return res
+    else:
+        return default
+
+
+## ----------------------------------------
 
 
 def create_app():
-    logging.warning("create_app")
+    ## Main function that is called by the entrypoint "run-app.py"
+    logging.warning("entrypoint")
+
+    ## ----------------------------------------
 
     app = Flask(__name__)
 
@@ -283,13 +328,42 @@ def create_app():
 
     ## ----------------------------------------
 
-    @app.get("/health")
-    def health():
+    @app.get("/")
+    def route_home():
         return jsonify(status="ok")
 
-    app.register_blueprint(create_blueprint_auth())
-    app.register_blueprint(create_blueprint_private())
-    app.register_blueprint(create_blueprint_tasks())
+    @app.get("/health")
+    def route_health():
+        return jsonify(status="ok")
+
+    ## ----------------------------------------
+
+    create_blueprint_auth(
+        app,
+        limiter,
+        db_auth_adapter=db_auth_adapter,
+    )
+
+    create_blueprint_manage(
+        app,
+        limiter,
+        db_auth_adapter=db_auth_adapter,
+        db_data_adapter=db_data_adapter,
+    )
+
+    create_blueprint_model(
+        app,
+        limiter,
+        feature_encoder=feature_encoder,
+        model_wrapper=model_wrapper,
+    )
+
+    create_blueprint_tasks(
+        app,
+        limiter,
+        db_data_adapter=db_data_adapter,
+        feature_encoder=feature_encoder,
+    )
 
     return app
 
@@ -297,80 +371,39 @@ def create_app():
 ## ----------------------------------------
 
 
-def read_secret_file(filepath_var):
-    ## Function to read a secret file and return a local variable
+# def require_roles(*allowed):
+#     def deco(fn):
+#         @wraps(fn)
+#         @auth_required("token")
+#         def wrapped(*args, **kwargs):
+#             roles = {role.name for role in current_user.roles}
+#             if not (roles & set(allowed)):
+#                 return fail("Insufficient permissions", 403)
+#             g.user_id = str(current_user.id)
+#             g.user = current_user
+#             g.roles = roles
+#             return fn(*args, **kwargs)
 
-    res = None
-    try:
-        path = Path(os.getenv(filepath_var))
-        with open(path, "r") as f:
-            res = f.read().strip()
+#         return wrapped
 
-    except Exception as e:
-        raise RuntimeError(
-            f"Missing or unreadable secret file at {filepath_var}"
-        ) from e
-
-    if res:
-        return res
-    else:
-        raise RuntimeError(f"Empty file without a secret at {filepath_var}")
+#     return deco
 
 
-## ----------------------------------------
+# def parse_json():
+#     if not request.is_json:
+#         raise ValueError("Content-Type must be application/json")
+#     body = request.get_json(silent=False)
+#     if not isinstance(body, dict):
+#         raise ValueError("JSON body must be an object")
+#     return body
 
 
-def read_env_list(list_var, default=None):
-    ## Function to read and convert a list from an environmental variable
-
-    res = [
-        item.strip(" ")
-        for item in str(os.getenv(list_var, "")).strip("([ ])").split(",")
-        if item != ""
-    ]
-
-    if res:
-        return res
-    else:
-        return default
-
-
-## ----------------------------------------
-
-
-def require_roles(*allowed):
-    def deco(fn):
-        @wraps(fn)
-        @auth_required("token")
-        def wrapped(*args, **kwargs):
-            roles = {role.name for role in current_user.roles}
-            if not (roles & set(allowed)):
-                return fail("Insufficient permissions", 403)
-            g.user_id = str(current_user.id)
-            g.user = current_user
-            g.roles = roles
-            return fn(*args, **kwargs)
-
-        return wrapped
-
-    return deco
-
-
-def parse_json():
-    if not request.is_json:
-        raise ValueError("Content-Type must be application/json")
-    body = request.get_json(silent=False)
-    if not isinstance(body, dict):
-        raise ValueError("JSON body must be an object")
-    return body
-
-
-def password_is_strong(password):
-    return (
-        isinstance(password, str)
-        and int(os.getenv("SECURITY_PASSWORD_LENGTH_MIN", "14"))
-        <= len(password)
-        <= int(os.getenv("SECURITY_PASSWORD_LENGTH_MAX", "128"))
-        and zxcvbn(password).get("score", 0)
-        >= int(os.getenv("SECURITY_ZXCVBN_MINIMUM_SCORE", "3"))
-    )
+# def password_is_strong(password):
+#     return (
+#         isinstance(password, str)
+#         and int(os.getenv("SECURITY_PASSWORD_LENGTH_MIN", "14"))
+#         <= len(password)
+#         <= int(os.getenv("SECURITY_PASSWORD_LENGTH_MAX", "128"))
+#         and zxcvbn(password).get("score", 0)
+#         >= int(os.getenv("SECURITY_ZXCVBN_MINIMUM_SCORE", "3"))
+#     )

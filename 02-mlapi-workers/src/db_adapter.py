@@ -2,7 +2,7 @@
 
 from psycopg_pool import ConnectionPool
 
-# from psycopg.rows import tuple_row
+# from psycopg.rows import dict_row, tuple_row
 # from psycopg.types.json import Jsonb
 
 
