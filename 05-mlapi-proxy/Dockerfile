@@ -1,3 +1,4 @@
+## proxy-service
 FROM nginx:stable-alpine
 
 ## Copy necessary files

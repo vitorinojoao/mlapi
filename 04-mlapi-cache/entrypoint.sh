@@ -19,7 +19,7 @@ fi
 
 cache_password="$cache_password" \
 envsubst '${CACHE_PORT},${cache_password}' \
-  < /usr/local/etc/redis-templates/redis.conf.template \
-  > /usr/local/etc/redis/redis.conf
+    < /usr/local/etc/redis-templates/redis.conf.template \
+    > /usr/local/etc/redis/redis.conf
 
 exec /usr/local/bin/docker-entrypoint.sh "$@"

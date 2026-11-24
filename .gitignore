@@ -5,13 +5,22 @@ test/
 tests/
 
 ## Secret files
-## docker-secrets/ ## Note: should be uncommented
+##
+## Note: this line should be uncommented
+## docker-secrets/*
+!docker-secrets/docker-secrets.md
+!docker-secrets/generate-secrets.sh
+secrets/
+secret/
+*.secret
 *.key
 *.crt
 *.pem
 
 ## Environment files
-## .env ## Note: should be uncommented
+##
+## Note: this line should be uncommented
+## .env
 .venv
 env/
 venv/

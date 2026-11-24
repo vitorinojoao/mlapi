@@ -5,85 +5,129 @@ Copyright (c) 2024-2026 João Vitorino
 
 ## Overview
 
-To deploy one or more ML models in a backend web server  
-and use a REST API to POST input data and GET output results,  
-you can start from this template and modify it to suit your needs.  
+To deploy one or more ML models in a backend production server,  
+following cyber security best-practices and software design principles,  
+you can start from this template and modify it to better suit your needs.  
 
 The template is divided into multiple parts:  
 
-- **docker-compose.yml** &nbsp;&ndash;&nbsp; The main configuration for Docker services, networks and volumes.
-- **01-mlapi-app** &nbsp;&ndash;&nbsp; Python Flask app with Gunicorn WSGI &nbsp;&ndash;&nbsp; provides default blueprints and routes.
-- **02-mlapi-workers** &nbsp;&ndash;&nbsp; Python worker processes/threads with APScheduler &nbsp;&ndash;&nbsp; provides default ML tasks.
-- **03-mlapi-db** &nbsp;&ndash;&nbsp; PostgreSQL primary relational database &nbsp;&ndash;&nbsp; provides default auth and data schemas.
-- **04-mlapi-cache** &nbsp;&ndash;&nbsp; Redis distributed in-memory cache &nbsp;&ndash;&nbsp; provides an efficient cache.
-- **05-mlapi-proxy** &nbsp;&ndash;&nbsp; Nginx SSL/TLS reverse proxy with rate limiting &nbsp;&ndash;&nbsp; provides a secure proxy.
+- **docker-compose.yml** &nbsp;&ndash;&nbsp; Configuration of Docker services, networks, and volumes.
+- **01-mlapi-app** &nbsp;&ndash;&nbsp; Flask web app with Gunicorn WSGI &nbsp;&ndash;&nbsp; for REST API routes and light tasks.
+- **02-mlapi-workers** &nbsp;&ndash;&nbsp; Python worker processes/threads with APScheduler &nbsp;&ndash;&nbsp; for heavy tasks.
+- **03-mlapi-db** &nbsp;&ndash;&nbsp; PostgreSQL primary relational database &nbsp;&ndash;&nbsp; for auth and data schemas.
+- **04-mlapi-cache** &nbsp;&ndash;&nbsp; Redis distributed in-memory cache &nbsp;&ndash;&nbsp; to improve efficiency.
+- **05-mlapi-proxy** &nbsp;&ndash;&nbsp; Nginx SSL/TLS reverse proxy with rate limiting &nbsp;&ndash;&nbsp; to improve security.
 
-## Docker Secrets
+## Architecture
 
-mkdir -p secrets
+```mermaid
+architecture-beta
+    group edge_net(cloud)[Edge Network]
+    group isolated_net(cloud)[Isolated Network]
 
-chmod 700 secrets
+    service inbound(internet)[IN]
+    service outbound(internet)[OUT]
 
-umask 077
+    service proxy(server)[Proxy] in edge_net
+    service app(server)[Web App] in edge_net
+    service workers(server)[Workers] in edge_net
 
-openssl rand -hex 32 > secrets/postgres_admin_password
+    service cache(database)[Cache] in isolated_net
+    service db(database)[Database] in isolated_net
 
-openssl rand -hex 32 > secrets/auth_db_password
+    service models(disk)[(models)] in edge_net
+    service volume(disk)[(persistence)] in isolated_net
 
-openssl rand -hex 32 > secrets/config_db_password
+    inbound:R --> L:proxy
+    proxy:R --> L:app
+    app:R --> L:cache
+    app:R --> L:db
+    app:B --> T:models
 
-openssl rand -hex 32 > secrets/data_db_password
+    outbound:R <-- L:workers
+    workers:T --> B:models
+    workers:R --> L:db
+    db:B --> T:volume
 
-chmod 600 secrets/*
+    align row inbound proxy app cache
+    align row models db
+    align row outbound workers volume
+
+    align column inbound outbound
+    align column app models workers
+    align column cache db volume
+```
 
 ## Docker Commands
 
-1: Validate configuration
+- Generate secret files
 
-docker compose config --quiet
+```bash
+    chmod +x ./docker-secrets/generate-secrets.sh && ./docker-secrets/generate-secrets.sh
+```
 
-2: Build all three images
+- Validate configuration
 
-docker compose build
+```bash
+    docker compose config --quiet
+```
 
-3: Start services in the background
+- Build all images
 
-docker compose up -d
+```bash
+    docker compose build app-service workers-service db-service cache-service proxy-service
+```
 
-4: Check status and health
+- Start all services/networks in the background
 
-docker compose ps
+```bash
+    docker compose up -d app-service workers-service db-service cache-service proxy-service
+```
 
-5: Inspect logs
+- Check status and health
 
-docker compose logs --tail=100 app-service worker-service db-service cache-service proxy-service
+```bash
+    docker compose ps
+```
 
-Stop every service:
+- Check most recent logs
 
-docker compose down
+```bash
+    docker compose logs --tail=100 app-service workers-service db-service cache-service proxy-service
+```
 
-Delete everything:
+- Stop all services/networks, without affecting persistent volumes
 
-docker system prune -a --volumes
+```bash
+    docker compose down app-service workers-service db-service cache-service proxy-service
+```
 
-## Local DNS Configuration
+- Permanently delete all images and persistent volumes
 
-1: Point mlapi.home.arpa to the Docker host's IP address in your local DNS server or the hosts file on your client
+```bash
+    docker system prune -a --volumes
+```
 
-2: Export the public CA certificate for installation on client devices
+## Local DNS Commands
 
-docker compose cp nginx:/etc/nginx/tls/local-ca.crt ./local-ca.crt
+- Point mlapi.home.arpa to the Docker host's IP address in your local DNS server or the hosts file on your client
 
-3: Install local-ca.crt into the client's trusted root certificate store. Never distribute local-ca.key
+- Export the public CA certificate for installation on client devices
 
-4: Test HTTPS
+```bash
+    docker compose cp nginx:/etc/nginx/tls/local-ca.crt ./local-ca.crt
+```
 
-curl --fail --show-error https://mlapi.home.arpa/health
+- Install local-ca.crt into the client's trusted root certificate store. Never distribute local-ca.key
 
-5: If DNS is not yet configured, test using the host IP while explicitly setting the hostname
+- Test HTTPS
 
-curl --resolve mlapi.home.arpa:443:127.0.0.1 https://mlapi.home.arpa/health
+```bash
+    curl --fail --show-error https://mlapi.home.arpa/health
+```
 
-Replace 127.0.0.1 with the correct host IP when testing from another machine
+- If DNS is not yet configured, test using the host IP while explicitly setting the hostname. Never use curl -k as a workaround
 
-Do not use curl -k as a permanent workaround for certificate errors
+```bash
+    curl --resolve mlapi.home.arpa:443:127.0.0.1 https://mlapi.home.arpa/health
+```

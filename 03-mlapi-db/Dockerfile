@@ -1,3 +1,4 @@
+## db-service
 FROM postgres:18-trixie
 
 ## Require DB_PORT build argument
